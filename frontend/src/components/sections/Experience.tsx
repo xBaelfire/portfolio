@@ -114,14 +114,14 @@ function ExperienceCard({
 
 function DesktopTimeline({ experiences: items, isInView }: { experiences: typeof experiences; isInView: boolean }) {
   return (
-    <div className="hidden lg:block relative overflow-hidden">
-      {/* Timeline vertical line */}
-      <div className="absolute left-1/2 top-0 -translate-x-1/2 w-0.5 h-full">
+    <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] gap-x-8">
+      {/* Timeline vertical line - positioned in the center column */}
+      <div className="col-start-2 row-start-1 row-end-[-1] flex justify-center">
         <motion.div
           initial={{ scaleY: 0 }}
           animate={isInView ? { scaleY: 1 } : {}}
           transition={{ duration: 1.5, ease: "easeOut" as const }}
-          className="w-full h-full"
+          className="w-0.5 h-full"
           style={{
             background: 'linear-gradient(180deg, #6366f1, #8b5cf6, rgba(99,102,241,0.1))',
             transformOrigin: 'top',
@@ -134,23 +134,30 @@ function DesktopTimeline({ experiences: items, isInView }: { experiences: typeof
         const startYear = exp.start_date.split('-')[0];
 
         return (
-          <div key={exp.id} className={`relative flex items-start ${isLeft ? 'flex-row' : 'flex-row-reverse'} mb-16 last:mb-0`}>
-            <motion.div
-              initial={{ opacity: 0, x: isLeft ? -60 : 60 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.6, delay: i * 0.1, ease: "easeOut" as const }}
-              className={`w-[45%] ${isLeft ? 'pr-8' : 'pl-8'}`}
+          <div key={exp.id} className="contents">
+            {/* Left column */}
+            <div className={`${isLeft ? '' : ''} flex ${isLeft ? 'justify-end' : 'justify-start'}`}
+              style={{ gridColumn: isLeft ? 1 : 3, gridRow: i + 1 }}
             >
-              <ExperienceCard experience={exp} />
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: isLeft ? -40 : 40 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.6, delay: i * 0.1, ease: "easeOut" as const }}
+                className="w-full max-w-md mb-12"
+              >
+                <ExperienceCard experience={exp} />
+              </motion.div>
+            </div>
 
-            {/* Center timeline dot */}
-            <div className="w-[10%] flex flex-col items-center relative shrink-0">
+            {/* Center dot */}
+            <div className="flex flex-col items-center relative"
+              style={{ gridColumn: 2, gridRow: i + 1 }}
+            >
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={isInView ? { scale: 1, opacity: 1 } : {}}
                 transition={{ duration: 0.4, delay: i * 0.1 + 0.2 }}
-                className="w-5 h-5 rounded-full border-2 border-indigo-500 bg-gray-950 z-10 relative"
+                className="w-5 h-5 rounded-full border-2 border-indigo-500 bg-gray-950 z-10 relative mt-6"
                 style={{ boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
               >
                 <div className="absolute inset-1 rounded-full bg-indigo-500" />
@@ -166,7 +173,8 @@ function DesktopTimeline({ experiences: items, isInView }: { experiences: typeof
               </motion.div>
             </div>
 
-            <div className="w-[45%]" />
+            {/* Empty spacer on opposite side */}
+            <div style={{ gridColumn: isLeft ? 3 : 1, gridRow: i + 1 }} />
           </div>
         );
       })}
@@ -176,9 +184,9 @@ function DesktopTimeline({ experiences: items, isInView }: { experiences: typeof
 
 function MobileTimeline({ experiences: items, isInView }: { experiences: typeof experiences; isInView: boolean }) {
   return (
-    <div className="lg:hidden relative pl-8">
+    <div className="lg:hidden relative pl-10">
       {/* Timeline vertical line */}
-      <div className="absolute left-3 top-0 w-0.5 h-full">
+      <div className="absolute left-[14px] top-0 w-0.5 h-full">
         <motion.div
           initial={{ scaleY: 0 }}
           animate={isInView ? { scaleY: 1 } : {}}
@@ -193,34 +201,21 @@ function MobileTimeline({ experiences: items, isInView }: { experiences: typeof 
 
       {items.map((exp, i) => (
         <div key={exp.id} className="relative mb-8 last:mb-0">
-          {/* Timeline dot - wrapper handles positioning, motion.div handles animation */}
-          <div
-            className="absolute -left-8 top-6 z-10"
-            style={{ transform: 'translateX(calc(-50% + 12px))' }}
-          >
+          {/* Timeline dot */}
+          <div className="absolute -left-10 top-5 w-[29px] flex justify-center z-10">
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={isInView ? { scale: 1, opacity: 1 } : {}}
               transition={{ duration: 0.4, delay: i * 0.1 + 0.2 }}
-              className="w-4 h-4 rounded-full border-2 border-indigo-500 bg-gray-950"
-              style={{ boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
+              className="w-3.5 h-3.5 rounded-full border-2 border-indigo-500 bg-gray-950"
+              style={{ boxShadow: '0 0 10px rgba(99,102,241,0.5)' }}
             >
               <div className="absolute inset-0.5 rounded-full bg-indigo-500" />
             </motion.div>
           </div>
 
-          {/* Year label */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={isInView ? { opacity: 1 } : {}}
-            transition={{ delay: i * 0.1 + 0.1 }}
-            className="text-xs font-mono text-indigo-400 mb-2"
-          >
-            {exp.start_date.split('-')[0]}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" as const }}
           >
@@ -237,7 +232,7 @@ export function Experience() {
   const isInView = useInView(ref, { once: true, margin: '-50px' });
 
   return (
-    <section id="experience" className="section relative overflow-hidden bg-gray-900/20">
+    <section id="experience" className="section relative bg-gray-900/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
           number="04"

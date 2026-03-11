@@ -105,7 +105,7 @@ export function Contact() {
   const inputClass = 'w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500/50 focus:bg-indigo-500/5 transition-all duration-200';
 
   return (
-    <section id="contact" className="section relative overflow-hidden bg-gray-900/20">
+    <section id="contact" className="section relative bg-gray-900/20">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div

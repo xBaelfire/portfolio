@@ -34,7 +34,7 @@ export function About() {
   };
 
   return (
-    <section id="about" className="section relative overflow-hidden">
+    <section id="about" className="section relative">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
@@ -49,10 +49,10 @@ export function About() {
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-24 items-center"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center"
         >
           {/* Left: Text content */}
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6 sm:gap-8">
             <SectionTitle
               number="01"
               label="About Me"
@@ -110,13 +110,13 @@ export function About() {
           {/* Right: Avatar / Image */}
           <motion.div
             variants={itemVariants}
-            className="relative flex items-center justify-center"
+            className="relative flex items-center justify-center py-8"
           >
             {/* Outer rotating border */}
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-              className="absolute w-56 h-56 sm:w-80 sm:h-80 rounded-full opacity-30"
+              className="absolute w-52 h-52 sm:w-72 sm:h-72 rounded-full opacity-30"
               style={{
                 background: 'conic-gradient(from 0deg, #6366f1, #8b5cf6, #ec4899, transparent, #6366f1)',
               }}
@@ -124,27 +124,24 @@ export function About() {
 
             {/* Main avatar container */}
             <div
-              className="relative w-48 h-48 sm:w-72 sm:h-72 rounded-full flex items-center justify-center overflow-hidden"
+              className="relative w-44 h-44 sm:w-64 sm:h-64 rounded-full flex items-center justify-center overflow-hidden"
               style={{
                 background: 'linear-gradient(135deg, #1e1b4b 0%, #1e1a3a 50%, #2d1b69 100%)',
                 border: '2px solid rgba(99,102,241,0.3)',
                 boxShadow: '0 0 60px rgba(99,102,241,0.2)',
               }}
             >
-              {/* Placeholder avatar */}
-              <div className="w-full h-full flex items-center justify-center">
-                <span
-                  className="text-6xl sm:text-8xl font-extrabold"
-                  style={{
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
-                >
-                  AC
-                </span>
-              </div>
+              <span
+                className="text-5xl sm:text-7xl font-extrabold"
+                style={{
+                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                AC
+              </span>
             </div>
 
             {/* Floating badge - Experience */}
@@ -152,10 +149,10 @@ export function About() {
               initial={{ opacity: 0, scale: 0 }}
               animate={isInView ? { opacity: 1, scale: 1 } : {}}
               transition={{ delay: 0.6, type: 'spring', stiffness: 200 }}
-              className="absolute -bottom-4 -right-4 glass border border-indigo-500/30 rounded-2xl px-4 py-3 text-center"
+              className="absolute bottom-2 right-2 sm:bottom-0 sm:right-0 glass border border-indigo-500/30 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 text-center"
             >
-              <div className="text-2xl font-extrabold gradient-text">5+</div>
-              <div className="text-xs text-slate-400">Years Exp.</div>
+              <div className="text-xl sm:text-2xl font-extrabold gradient-text">5+</div>
+              <div className="text-[10px] sm:text-xs text-slate-400">Years Exp.</div>
             </motion.div>
 
             {/* Floating badge - Projects */}
@@ -163,10 +160,10 @@ export function About() {
               initial={{ opacity: 0, scale: 0 }}
               animate={isInView ? { opacity: 1, scale: 1 } : {}}
               transition={{ delay: 0.8, type: 'spring', stiffness: 200 }}
-              className="absolute -top-4 -left-4 glass border border-purple-500/30 rounded-2xl px-4 py-3 text-center"
+              className="absolute top-2 left-2 sm:top-0 sm:left-0 glass border border-purple-500/30 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 text-center"
             >
-              <div className="text-2xl font-extrabold gradient-text">50+</div>
-              <div className="text-xs text-slate-400">Projects</div>
+              <div className="text-xl sm:text-2xl font-extrabold gradient-text">50+</div>
+              <div className="text-[10px] sm:text-xs text-slate-400">Projects</div>
             </motion.div>
           </motion.div>
         </motion.div>
@@ -176,20 +173,20 @@ export function About() {
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 sm:mt-20"
         >
           {facts.map(({ icon: Icon, label, value, color }) => (
             <motion.div
               key={label}
               variants={itemVariants}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="glass border border-white/5 rounded-2xl p-6 text-center group hover:border-indigo-500/20 transition-colors"
+              className="glass border border-white/5 rounded-2xl p-4 sm:p-6 text-center group hover:border-indigo-500/20 transition-colors"
             >
               <div className={`${color} mb-3 flex justify-center`}>
-                <Icon size={28} />
+                <Icon size={24} />
               </div>
-              <div className="text-2xl font-extrabold text-white mb-1">{value}</div>
-              <div className="text-sm text-slate-500">{label}</div>
+              <div className="text-xl sm:text-2xl font-extrabold text-white mb-1">{value}</div>
+              <div className="text-xs sm:text-sm text-slate-500">{label}</div>
             </motion.div>
           ))}
         </motion.div>

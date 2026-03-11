@@ -117,7 +117,7 @@ export function Testimonials() {
   const active = testimonials[activeIndex];
 
   return (
-    <section id="testimonials" className="section relative overflow-hidden bg-gray-900/20">
+    <section id="testimonials" className="section relative bg-gray-900/20">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
@@ -126,7 +126,7 @@ export function Testimonials() {
         />
       </div>
 
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-12 lg:px-16">
         <SectionTitle
           number="05"
           label="Testimonials"

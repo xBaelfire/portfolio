@@ -266,12 +266,12 @@ export function Hero() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.3 }}
-            className="flex flex-wrap justify-center gap-8 mt-4 pt-8 border-t border-white/5 w-full max-w-lg"
+            className="grid grid-cols-3 gap-4 sm:gap-8 mt-4 pt-8 border-t border-white/5 w-full max-w-lg"
           >
             {stats.map(({ value, label }) => (
               <div key={label} className="text-center">
-                <div className="text-3xl font-extrabold gradient-text">{value}</div>
-                <div className="text-sm text-slate-500 mt-1">{label}</div>
+                <div className="text-2xl sm:text-3xl font-extrabold gradient-text">{value}</div>
+                <div className="text-xs sm:text-sm text-slate-500 mt-1">{label}</div>
               </div>
             ))}
           </motion.div>
