@@ -74,7 +74,7 @@ export function BlogPreview() {
               className="group glass border border-white/5 rounded-2xl overflow-hidden hover:border-indigo-500/20 transition-colors"
             >
               {/* Cover gradient */}
-              <div className={`relative h-44 bg-gradient-to-br ${post.gradient} overflow-hidden`}>
+              <div className={`relative h-36 sm:h-44 bg-gradient-to-br ${post.gradient} overflow-hidden`}>
                 <div className="absolute inset-0 grid-bg opacity-30" />
                 <div className="absolute bottom-4 left-4 flex flex-wrap gap-1.5">
                   {post.tags.map((tag) => (

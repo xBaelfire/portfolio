@@ -142,11 +142,12 @@ export function Testimonials() {
               initial="enter"
               animate="center"
               exit="exit"
-              className="glass border border-white/5 rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden"
+              className="glass border border-white/5 rounded-2xl sm:rounded-3xl p-6 sm:p-12 text-center relative overflow-hidden"
             >
               {/* Quote icon */}
-              <div className="absolute top-8 left-8 text-indigo-500/20">
-                <Quote size={60} />
+              <div className="absolute top-4 left-4 sm:top-8 sm:left-8 text-indigo-500/20">
+                <Quote size={40} className="sm:hidden" />
+                <Quote size={60} className="hidden sm:block" />
               </div>
 
               {/* Stars */}
@@ -179,12 +180,12 @@ export function Testimonials() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Navigation arrows */}
+          {/* Navigation arrows - desktop: outside card, mobile: below card */}
           <motion.button
             whileHover={{ scale: 1.1, x: -2 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => handleNavClick(prev)}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 w-10 h-10 rounded-full glass border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-indigo-500/30 transition-colors hidden sm:flex"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 w-10 h-10 rounded-full glass border border-white/10 items-center justify-center text-slate-400 hover:text-white hover:border-indigo-500/30 transition-colors hidden sm:flex"
           >
             <ChevronLeft size={18} />
           </motion.button>
@@ -193,10 +194,29 @@ export function Testimonials() {
             whileHover={{ scale: 1.1, x: 2 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => handleNavClick(next)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 w-10 h-10 rounded-full glass border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-indigo-500/30 transition-colors hidden sm:flex"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 w-10 h-10 rounded-full glass border border-white/10 items-center justify-center text-slate-400 hover:text-white hover:border-indigo-500/30 transition-colors hidden sm:flex"
           >
             <ChevronRight size={18} />
           </motion.button>
+
+          {/* Mobile navigation arrows */}
+          <div className="flex sm:hidden items-center justify-center gap-4 mt-6">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleNavClick(prev)}
+              className="w-10 h-10 rounded-full glass border border-white/10 flex items-center justify-center text-slate-400 active:text-white active:border-indigo-500/30 transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </motion.button>
+            <span className="text-xs text-slate-500 font-mono">{activeIndex + 1} / {testimonials.length}</span>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleNavClick(next)}
+              className="w-10 h-10 rounded-full glass border border-white/10 flex items-center justify-center text-slate-400 active:text-white active:border-indigo-500/30 transition-colors"
+            >
+              <ChevronRight size={18} />
+            </motion.button>
+          </div>
         </div>
 
         {/* Dots */}

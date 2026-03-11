@@ -338,6 +338,12 @@ a {
   padding: 6rem 0;
 }
 
+@media (max-width: 768px) {
+  .section {
+    padding: 4rem 0;
+  }
+}
+
 /* ===== ADMIN PANEL ===== */
 .admin-sidebar {
   width: 260px;
@@ -452,6 +458,15 @@ code, pre, .font-mono {
   font-family: var(--font-mono);
 }
 
+/* ===== SCROLLBAR HIDE UTILITY ===== */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* ===== FOCUS STYLES ===== */
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -462,6 +477,9 @@ code, pre, .font-mono {
 @media (max-width: 768px) {
   body {
     cursor: auto;
+  }
+  a, button {
+    cursor: pointer;
   }
   .cursor-dot,
   .cursor-ring {

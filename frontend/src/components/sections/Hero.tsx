@@ -128,8 +128,8 @@ export function Hero() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-        <div className="flex flex-col items-center text-center gap-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 sm:pb-20">
+        <div className="flex flex-col items-center text-center gap-4 sm:gap-6">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: -20 }}
@@ -282,7 +282,7 @@ export function Hero() {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
         onClick={() => scrollToSection('about')}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors group"
+        className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 text-slate-500 hover:text-indigo-400 transition-colors group"
       >
         <span className="text-xs tracking-widest uppercase font-mono">Scroll</span>
         <motion.div

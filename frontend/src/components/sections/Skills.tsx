@@ -104,14 +104,14 @@ export function Skills() {
           transition={{ duration: 0.6 }}
         >
           {/* Tab navigation */}
-          <div className="flex flex-wrap gap-2 mb-12">
+          <div className="flex gap-2 mb-8 sm:mb-12 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
             {skillCategories.map((cat) => (
               <motion.button
                 key={cat.id}
                 onClick={() => setActiveTab(cat.id)}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.97 }}
-                className={`relative px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`relative px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0 ${
                   activeTab === cat.id
                     ? 'text-white'
                     : 'text-slate-400 hover:text-white hover:bg-white/5'

@@ -49,7 +49,7 @@ export function About() {
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-24 items-center"
         >
           {/* Left: Text content */}
           <div className="flex flex-col gap-8">
@@ -116,7 +116,7 @@ export function About() {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-              className="absolute w-80 h-80 rounded-full opacity-30"
+              className="absolute w-56 h-56 sm:w-80 sm:h-80 rounded-full opacity-30"
               style={{
                 background: 'conic-gradient(from 0deg, #6366f1, #8b5cf6, #ec4899, transparent, #6366f1)',
               }}
@@ -124,7 +124,7 @@ export function About() {
 
             {/* Main avatar container */}
             <div
-              className="relative w-72 h-72 rounded-full flex items-center justify-center overflow-hidden"
+              className="relative w-48 h-48 sm:w-72 sm:h-72 rounded-full flex items-center justify-center overflow-hidden"
               style={{
                 background: 'linear-gradient(135deg, #1e1b4b 0%, #1e1a3a 50%, #2d1b69 100%)',
                 border: '2px solid rgba(99,102,241,0.3)',
@@ -134,7 +134,7 @@ export function About() {
               {/* Placeholder avatar */}
               <div className="w-full h-full flex items-center justify-center">
                 <span
-                  className="text-8xl font-extrabold"
+                  className="text-6xl sm:text-8xl font-extrabold"
                   style={{
                     background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
                     WebkitBackgroundClip: 'text',

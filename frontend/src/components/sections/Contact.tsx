@@ -187,7 +187,7 @@ export function Contact() {
 
           {/* Right: Contact form */}
           <div className="lg:col-span-3">
-            <div className="glass border border-white/5 rounded-3xl p-8">
+            <div className="glass border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8">
               {status === 'success' ? (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
