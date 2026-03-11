@@ -1,17 +1,18 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Download, Code2, Heart, Coffee, Lightbulb } from 'lucide-react';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { Button } from '@/components/ui/Button';
+import { getSettings } from '@/lib/api';
 
-const facts = [
+const DEFAULT_FACTS = [
   { icon: Code2, label: 'Lines of Code', value: '500K+', color: 'text-indigo-400' },
   { icon: Coffee, label: 'Cups of Coffee', value: '1K+', color: 'text-amber-400' },
   { icon: Heart, label: 'Satisfied Clients', value: '30+', color: 'text-rose-400' },
   { icon: Lightbulb, label: 'Side Projects', value: '15+', color: 'text-yellow-400' },
 ];
 
-const highlights = [
+const DEFAULT_HIGHLIGHTS = [
   'React & TypeScript',
   'Node.js',
   'Cloud Architecture',
@@ -19,9 +20,66 @@ const highlights = [
   'Performance Optimization',
 ];
 
+const DEFAULT_BIO_P2 = "When I'm not coding, I'm exploring new technologies, contributing to open source, or sharing knowledge through my blog. I believe in writing clean, maintainable code that scales with business needs.";
+
+function buildFacts(settings: Record<string, string>) {
+  return [
+    { icon: Code2, label: 'Lines of Code', value: '500K+', color: 'text-indigo-400' },
+    { icon: Coffee, label: 'Cups of Coffee', value: '1K+', color: 'text-amber-400' },
+    {
+      icon: Heart,
+      label: 'Satisfied Clients',
+      value: settings.stats_clients ? `${settings.stats_clients}+` : DEFAULT_FACTS[2].value,
+      color: 'text-rose-400',
+    },
+    {
+      icon: Lightbulb,
+      label: 'Side Projects',
+      value: settings.stats_projects ? `${settings.stats_projects}+` : DEFAULT_FACTS[3].value,
+      color: 'text-yellow-400',
+    },
+  ];
+}
+
 export function About() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSettings()
+      .then((data) => {
+        if (!cancelled) {
+          setSettings(data);
+          setSettingsLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSettingsLoaded(true);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const highlights = settings.about_highlights
+    ? settings.about_highlights.split(',').map((s) => s.trim()).filter(Boolean)
+    : DEFAULT_HIGHLIGHTS;
+
+  const facts = buildFacts(settings);
+
+  const yearsExp = settings.stats_years || '5';
+  const projectsCount = settings.stats_projects || '50';
+  const name = settings.site_name || 'Alex Chen';
+  const initials = name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  const resumeUrl = settings.resume_url || '/resume.pdf';
+
+  const bioText = settings.about_bio;
+  const bioParagraphs = bioText
+    ? bioText.split('\n').filter(Boolean)
+    : null;
 
   const containerVariants = {
     hidden: {},
@@ -34,7 +92,11 @@ export function About() {
   };
 
   return (
-    <section id="about" className="section relative">
+    <section
+      id="about"
+      className="section relative"
+      style={{ opacity: settingsLoaded ? 1 : 0.6, transition: 'opacity 0.4s ease-in-out' }}
+    >
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
@@ -57,31 +119,33 @@ export function About() {
               number="01"
               label="About Me"
               title="Passionate About Building Great Software"
-              subtitle="I'm a full stack developer with 5+ years of experience crafting scalable web applications."
+              subtitle={`I'm a full stack developer with ${yearsExp}+ years of experience crafting scalable web applications.`}
             />
 
             <motion.div variants={itemVariants} className="flex flex-col gap-4 text-slate-400 leading-relaxed">
-              <p>
-                I specialize in building end-to-end web applications with a focus on{' '}
-                {highlights.slice(0, 2).map((h, i) => (
-                  <span key={h}>
-                    <span className="text-indigo-400 font-medium">{h}</span>
-                    {i < 1 && ' and '}
-                  </span>
-                ))}
-                . My approach combines technical expertise with an eye for design to create
-                seamless user experiences.
-              </p>
-              <p>
-                When I'm not coding, I'm exploring new technologies, contributing to open source,
-                or sharing knowledge through my blog. I believe in writing clean, maintainable code
-                that scales with business needs.
-              </p>
-              <p>
-                Currently available for{' '}
-                <span className="text-green-400 font-medium">freelance projects</span> and
-                open to full-time opportunities with innovative companies.
-              </p>
+              {bioParagraphs ? (
+                bioParagraphs.map((p, i) => <p key={i}>{p}</p>)
+              ) : (
+                <>
+                  <p>
+                    I specialize in building end-to-end web applications with a focus on{' '}
+                    {highlights.slice(0, 2).map((h, i) => (
+                      <span key={h}>
+                        <span className="text-indigo-400 font-medium">{h}</span>
+                        {i < 1 && ' and '}
+                      </span>
+                    ))}
+                    . My approach combines technical expertise with an eye for design to create
+                    seamless user experiences.
+                  </p>
+                  <p>{DEFAULT_BIO_P2}</p>
+                  <p>
+                    Currently available for{' '}
+                    <span className="text-green-400 font-medium">freelance projects</span> and
+                    open to full-time opportunities with innovative companies.
+                  </p>
+                </>
+              )}
             </motion.div>
 
             {/* Highlight tags */}
@@ -97,8 +161,8 @@ export function About() {
                 leftIcon={<Download size={16} />}
                 onClick={() => {
                   const link = document.createElement('a');
-                  link.href = '/resume.pdf';
-                  link.download = 'Alex_Chen_Resume.pdf';
+                  link.href = resumeUrl;
+                  link.download = `${name.replace(/\s+/g, '_')}_Resume.pdf`;
                   link.click();
                 }}
               >
@@ -140,7 +204,7 @@ export function About() {
                   backgroundClip: 'text',
                 }}
               >
-                AC
+                {initials}
               </span>
             </div>
 
@@ -151,7 +215,7 @@ export function About() {
               transition={{ delay: 0.6, type: 'spring', stiffness: 200 }}
               className="absolute bottom-2 right-2 sm:bottom-0 sm:right-0 glass border border-indigo-500/30 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 text-center"
             >
-              <div className="text-xl sm:text-2xl font-extrabold gradient-text">5+</div>
+              <div className="text-xl sm:text-2xl font-extrabold gradient-text">{yearsExp}+</div>
               <div className="text-[10px] sm:text-xs text-slate-400">Years Exp.</div>
             </motion.div>
 
@@ -162,7 +226,7 @@ export function About() {
               transition={{ delay: 0.8, type: 'spring', stiffness: 200 }}
               className="absolute top-2 left-2 sm:top-0 sm:left-0 glass border border-purple-500/30 rounded-2xl px-3 py-2 sm:px-4 sm:py-3 text-center"
             >
-              <div className="text-xl sm:text-2xl font-extrabold gradient-text">50+</div>
+              <div className="text-xl sm:text-2xl font-extrabold gradient-text">{projectsCount}+</div>
               <div className="text-[10px] sm:text-xs text-slate-400">Projects</div>
             </motion.div>
           </motion.div>

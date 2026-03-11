@@ -3,29 +3,46 @@ import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { Github, Linkedin, Twitter, ArrowDown, Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { scrollToSection } from '@/lib/utils';
+import { getSettings } from '@/lib/api';
 
-const roles = [
+const DEFAULT_NAME = 'Alex Chen';
+const DEFAULT_TAGLINE = 'I craft exceptional digital experiences with clean code and thoughtful design. Passionate about building products that make a difference.';
+const DEFAULT_ROLES = [
   'Full Stack Developer',
   'UI/UX Enthusiast',
   'Problem Solver',
   'Open Source Contributor',
 ];
-
-const stats = [
+const DEFAULT_STATS = [
   { value: '5+', label: 'Years Experience' },
   { value: '50+', label: 'Projects Completed' },
   { value: '30+', label: 'Happy Clients' },
 ];
+const DEFAULT_SOCIAL = {
+  github: 'https://github.com',
+  linkedin: 'https://linkedin.com',
+  twitter: 'https://twitter.com',
+};
 
-const socialLinks = [
-  { icon: Github, href: 'https://github.com', label: 'GitHub' },
-  { icon: Linkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
-  { icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
-];
+function buildSocialLinks(settings: Record<string, string>) {
+  return [
+    { icon: Github, href: settings.social_github || DEFAULT_SOCIAL.github, label: 'GitHub' },
+    { icon: Linkedin, href: settings.social_linkedin || DEFAULT_SOCIAL.linkedin, label: 'LinkedIn' },
+    { icon: Twitter, href: settings.social_twitter || DEFAULT_SOCIAL.twitter, label: 'Twitter' },
+  ];
+}
 
-const nameLetters = 'Alex Chen'.split('');
+function buildStats(settings: Record<string, string>) {
+  return [
+    { value: settings.stats_years ? `${settings.stats_years}+` : DEFAULT_STATS[0].value, label: 'Years Experience' },
+    { value: settings.stats_projects ? `${settings.stats_projects}+` : DEFAULT_STATS[1].value, label: 'Projects Completed' },
+    { value: settings.stats_clients ? `${settings.stats_clients}+` : DEFAULT_STATS[2].value, label: 'Happy Clients' },
+  ];
+}
 
 export function Hero() {
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [roleIndex, setRoleIndex] = useState(0);
   const [displayedRole, setDisplayedRole] = useState('');
   const [isTyping, setIsTyping] = useState(true);
@@ -40,6 +57,34 @@ export function Hero() {
   const orb1Y = useTransform(springY, [-0.5, 0.5], ['-30px', '30px']);
   const orb2X = useTransform(springX, [-0.5, 0.5], ['20px', '-20px']);
   const orb2Y = useTransform(springY, [-0.5, 0.5], ['20px', '-20px']);
+
+  // Fetch settings
+  useEffect(() => {
+    let cancelled = false;
+    getSettings()
+      .then((data) => {
+        if (!cancelled) {
+          setSettings(data);
+          setSettingsLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSettingsLoaded(true);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const name = settings.site_name || DEFAULT_NAME;
+  const nameLetters = name.split('');
+  const tagline = settings.site_tagline || DEFAULT_TAGLINE;
+  const roles = settings.site_title
+    ? [settings.site_title, ...DEFAULT_ROLES.slice(1)]
+    : DEFAULT_ROLES;
+  const stats = buildStats(settings);
+  const socialLinks = buildSocialLinks(settings);
+  const resumeUrl = settings.resume_url || '/resume.pdf';
 
   // Typewriter effect
   useEffect(() => {
@@ -68,7 +113,7 @@ export function Hero() {
     }
 
     return () => clearTimeout(timeout);
-  }, [displayedRole, isTyping, roleIndex]);
+  }, [displayedRole, isTyping, roleIndex, roles]);
 
   // Mouse parallax
   useEffect(() => {
@@ -100,6 +145,7 @@ export function Hero() {
       id="hero"
       ref={containerRef}
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden grid-bg"
+      style={{ opacity: settingsLoaded ? 1 : 0.6, transition: 'opacity 0.4s ease-in-out' }}
     >
       {/* Background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -163,7 +209,7 @@ export function Hero() {
           >
             {nameLetters.map((letter, i) => (
               <motion.span
-                key={i}
+                key={`${name}-${i}`}
                 variants={letterVariants}
                 className={`text-6xl sm:text-8xl lg:text-9xl font-extrabold tracking-tight ${
                   letter === ' ' ? 'w-6 sm:w-10' : ''
@@ -204,8 +250,7 @@ export function Hero() {
             transition={{ delay: 1.0 }}
             className="text-slate-400 text-base sm:text-lg max-w-2xl leading-relaxed"
           >
-            I craft exceptional digital experiences with clean code and thoughtful design.
-            Passionate about building products that make a difference.
+            {tagline}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -229,8 +274,8 @@ export function Hero() {
               leftIcon={<Download size={16} />}
               onClick={() => {
                 const link = document.createElement('a');
-                link.href = '/resume.pdf';
-                link.download = 'Alex_Chen_Resume.pdf';
+                link.href = resumeUrl;
+                link.download = `${name.replace(/\s+/g, '_')}_Resume.pdf`;
                 link.click();
               }}
             >

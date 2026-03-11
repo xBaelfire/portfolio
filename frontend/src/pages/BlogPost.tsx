@@ -1,102 +1,106 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ArrowLeft, Twitter, Linkedin, Link2, Tag, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, Twitter, Linkedin, Link2, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { formatDate } from '@/lib/utils';
-
-const ALL_POSTS = [
-  {
-    id: '1',
-    slug: 'building-scalable-react-apps',
-    title: 'Building Scalable React Applications in 2025',
-    excerpt: 'Best practices for structuring large React codebases, state management patterns, and performance optimization techniques.',
-    content: `
-      <p>React has come a long way since its introduction. In 2025, building scalable applications requires
-      a combination of architectural decisions, performance awareness, and developer experience considerations.</p>
-
-      <h2>1. Project Structure</h2>
-      <p>A well-organized project structure is the foundation of a scalable React application.
-      Rather than organizing by file type (components, hooks, utils), consider organizing by feature or domain.</p>
-
-      <pre><code>src/
-  features/
-    auth/
-      components/
-      hooks/
-      store/
-      types.ts
-    products/
-      components/
-      hooks/
-      api.ts
-  shared/
-    components/
-    hooks/
-    utils/
-  app/
-    routes.tsx
-    App.tsx</code></pre>
-
-      <h2>2. State Management</h2>
-      <p>Not every piece of state belongs in a global store. Consider the following hierarchy:</p>
-      <ul>
-        <li><strong>Local state</strong>: useState, useReducer for component-specific state</li>
-        <li><strong>Server state</strong>: TanStack Query for remote data fetching and caching</li>
-        <li><strong>Global state</strong>: Zustand or Redux Toolkit for app-wide shared state</li>
-        <li><strong>URL state</strong>: React Router for navigation and filter state</li>
-      </ul>
-
-      <h2>3. Performance Optimization</h2>
-      <p>Performance is not an afterthought — it should be built into your development process from day one.
-      Key techniques include code splitting with React.lazy, memoization with useMemo and useCallback,
-      and virtualization for long lists with TanStack Virtual.</p>
-
-      <h2>4. TypeScript Best Practices</h2>
-      <p>TypeScript is not optional in 2025. Use strict mode, avoid <code>any</code>, and leverage
-      discriminated unions for complex state machines.</p>
-
-      <h2>Conclusion</h2>
-      <p>Building scalable React applications requires intentional architecture decisions.
-      Start simple, add complexity only when needed, and always keep the developer experience in mind.</p>
-    `,
-    tags: ['React', 'TypeScript', 'Architecture'],
-    created_at: '2025-03-01',
-    read_time: 8,
-    gradient: 'from-indigo-900 to-purple-900',
-  },
-  {
-    id: '2',
-    slug: 'cloudflare-workers-guide',
-    title: 'The Complete Guide to Cloudflare Workers',
-    excerpt: 'Everything you need to know about deploying serverless applications at the edge.',
-    content: `<p>Cloudflare Workers provide an incredible platform for running serverless code at the edge, closest to your users.</p>
-    <h2>Getting Started</h2><p>Workers use the V8 JavaScript engine with a Web API-compatible runtime...</p>`,
-    tags: ['Cloudflare', 'Serverless', 'Edge Computing'],
-    created_at: '2025-02-15',
-    read_time: 12,
-    gradient: 'from-cyan-900 to-blue-900',
-  },
-];
+import { getPost, getPosts } from '@/lib/api';
+import type { BlogPost as BlogPostType } from '@/types';
 
 export function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  const post = ALL_POSTS.find((p) => p.slug === slug);
-  const currentIndex = post ? ALL_POSTS.indexOf(post) : -1;
-  const relatedPosts = ALL_POSTS.filter((p) => p.slug !== slug).slice(0, 3);
-  const prevPost = currentIndex > 0 ? ALL_POSTS[currentIndex - 1] : null;
-  const nextPost = currentIndex < ALL_POSTS.length - 1 ? ALL_POSTS[currentIndex + 1] : null;
+  const [post, setPost] = useState<BlogPostType | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<readonly BlogPostType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!slug) return;
+
+    let cancelled = false;
+
+    async function fetchData() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [postData, allPostsRes] = await Promise.all([
+          getPost(slug ?? ''),
+          getPosts({ published: true, per_page: 10 }),
+        ]);
+
+        if (cancelled) return;
+
+        setPost(postData);
+
+        const allPosts = Array.isArray(allPostsRes) ? allPostsRes : allPostsRes.data;
+        const related = allPosts.filter((p) => p.slug !== slug).slice(0, 3);
+        setRelatedPosts(related);
+      } catch (err) {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : 'Failed to load post';
+          setError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+    return () => { cancelled = true; };
+  }, [slug]);
 
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href).catch(() => {});
   };
 
-  if (!post) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 pt-20">
+        {/* Hero skeleton */}
+        <div className="relative py-20 sm:py-28 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse">
+          <div className="relative max-w-4xl mx-auto px-4 text-center">
+            <div className="h-4 w-24 bg-white/10 rounded mx-auto mb-8" />
+            <div className="flex justify-center gap-2 mb-6">
+              <div className="h-6 w-16 bg-white/10 rounded-full" />
+              <div className="h-6 w-20 bg-white/10 rounded-full" />
+            </div>
+            <div className="h-10 w-3/4 bg-white/10 rounded mx-auto mb-6" />
+            <div className="flex justify-center gap-6">
+              <div className="h-4 w-24 bg-white/10 rounded" />
+              <div className="h-4 w-20 bg-white/10 rounded" />
+            </div>
+          </div>
+        </div>
+        {/* Content skeleton */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="space-y-4 animate-pulse">
+            <div className="h-4 w-full bg-white/5 rounded" />
+            <div className="h-4 w-5/6 bg-white/5 rounded" />
+            <div className="h-4 w-4/6 bg-white/5 rounded" />
+            <div className="h-8 w-1/3 bg-white/5 rounded mt-8" />
+            <div className="h-4 w-full bg-white/5 rounded" />
+            <div className="h-4 w-3/4 bg-white/5 rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !post) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">Post Not Found</h1>
+          <h1 className="text-4xl font-bold text-white mb-4">
+            {error ? 'Unable to Load Post' : 'Post Not Found'}
+          </h1>
+          <p className="text-slate-400 mb-6">
+            {error ?? 'The article you are looking for does not exist.'}
+          </p>
           <Button variant="primary" onClick={() => navigate('/blog')}>Back to Blog</Button>
         </div>
       </div>
@@ -106,7 +110,7 @@ export function BlogPost() {
   return (
     <div className="min-h-screen bg-gray-950 pt-20">
       {/* Hero */}
-      <div className={`relative py-20 sm:py-28 bg-gradient-to-br ${post.gradient}`}>
+      <div className="relative py-20 sm:py-28 bg-gradient-to-br from-indigo-900 to-purple-900">
         <div className="absolute inset-0 grid-bg opacity-20" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
           <motion.div
@@ -228,28 +232,8 @@ export function BlogPost() {
               </div>
             </div>
 
-            {/* Prev / Next */}
+            {/* Prev / Next - removed since we don't have ordered list from single-post fetch */}
             <div className="gradient-line mt-12 mb-8" />
-            <div className="flex items-center justify-between gap-4">
-              {prevPost ? (
-                <Link to={`/blog/${prevPost.slug}`} className="flex items-center gap-2 group text-slate-400 hover:text-white transition-colors">
-                  <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                  <div>
-                    <div className="text-xs text-slate-600 uppercase">Previous</div>
-                    <div className="text-sm font-medium line-clamp-1">{prevPost.title}</div>
-                  </div>
-                </Link>
-              ) : <div />}
-              {nextPost ? (
-                <Link to={`/blog/${nextPost.slug}`} className="flex items-center gap-2 group text-slate-400 hover:text-white transition-colors text-right">
-                  <div>
-                    <div className="text-xs text-slate-600 uppercase">Next</div>
-                    <div className="text-sm font-medium line-clamp-1">{nextPost.title}</div>
-                  </div>
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </Link>
-              ) : <div />}
-            </div>
           </motion.article>
 
           {/* Sidebar */}

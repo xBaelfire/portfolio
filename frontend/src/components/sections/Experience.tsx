@@ -1,63 +1,42 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { MapPin, ExternalLink } from 'lucide-react';
 import { SectionTitle } from '@/components/ui/SectionTitle';
+import { getExperience, type ExperienceEntry } from '@/lib/api';
 
-const experiences = [
-  {
-    id: '1',
-    company: 'TechVision Inc.',
-    role: 'Senior Full Stack Engineer',
-    start_date: '2022-01',
-    end_date: null,
-    is_current: true,
-    location: 'San Francisco, CA (Remote)',
-    description: 'Leading development of a SaaS platform serving 50K+ users. Architected microservices migration reducing latency by 40%. Mentored junior developers and established best practices.',
-    tech_stack: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'Redis', 'AWS', 'Docker'],
-    company_url: 'https://example.com',
-  },
-  {
-    id: '2',
-    company: 'DigitalCraft Agency',
-    role: 'Full Stack Developer',
-    start_date: '2020-03',
-    end_date: '2021-12',
-    is_current: false,
-    location: 'New York, NY',
-    description: 'Built and maintained 15+ client websites and web applications. Introduced React to the frontend stack. Implemented automated testing increasing code coverage from 20% to 85%.',
-    tech_stack: ['React', 'Vue.js', 'PHP', 'MySQL', 'Laravel', 'AWS'],
-    company_url: 'https://example.com',
-  },
-  {
-    id: '3',
-    company: 'StartupLab',
-    role: 'Frontend Developer',
-    start_date: '2019-06',
-    end_date: '2020-02',
-    is_current: false,
-    location: 'Austin, TX',
-    description: 'Developed responsive UI components for a B2B analytics product. Collaborated closely with design team to implement pixel-perfect interfaces. Reduced bundle size by 35% through code splitting.',
-    tech_stack: ['React', 'JavaScript', 'SCSS', 'Webpack', 'REST APIs'],
-    company_url: 'https://example.com',
-  },
-  {
-    id: '4',
-    company: 'Freelance',
-    role: 'Web Developer',
-    start_date: '2018-01',
-    end_date: '2019-05',
-    is_current: false,
-    location: 'Remote',
-    description: 'Delivered 20+ freelance projects for small businesses and startups. Focused on e-commerce solutions, landing pages, and CMS implementations.',
-    tech_stack: ['HTML', 'CSS', 'JavaScript', 'WordPress', 'Shopify'],
-    company_url: null,
-  },
-];
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-8 max-w-2xl mx-auto">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="glass border border-white/5 rounded-2xl p-6 sm:p-8 animate-pulse"
+        >
+          <div className="h-5 w-48 bg-white/10 rounded mb-3" />
+          <div className="h-4 w-32 bg-indigo-500/10 rounded mb-4" />
+          <div className="flex gap-3 mb-4">
+            <div className="h-3 w-24 bg-white/5 rounded" />
+            <div className="h-3 w-28 bg-white/5 rounded" />
+          </div>
+          <div className="space-y-2 mb-4">
+            <div className="h-3 w-full bg-white/5 rounded" />
+            <div className="h-3 w-3/4 bg-white/5 rounded" />
+          </div>
+          <div className="flex gap-1.5">
+            {[1, 2, 3, 4].map((j) => (
+              <div key={j} className="h-5 w-16 bg-white/5 rounded-full" />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function ExperienceCard({
   experience,
 }: {
-  experience: typeof experiences[0];
+  experience: ExperienceEntry;
 }) {
   const startYear = experience.start_date.split('-')[0];
   const endYear = experience.end_date ? experience.end_date.split('-')[0] : 'Present';
@@ -112,7 +91,7 @@ function ExperienceCard({
   );
 }
 
-function DesktopTimeline({ experiences: items, isInView }: { experiences: typeof experiences; isInView: boolean }) {
+function DesktopTimeline({ experiences: items, isInView }: { experiences: readonly ExperienceEntry[]; isInView: boolean }) {
   return (
     <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] gap-x-8 relative">
       {/* Timeline vertical line - absolute so it spans full height */}
@@ -180,7 +159,7 @@ function DesktopTimeline({ experiences: items, isInView }: { experiences: typeof
   );
 }
 
-function MobileTimeline({ experiences: items, isInView }: { experiences: typeof experiences; isInView: boolean }) {
+function MobileTimeline({ experiences: items, isInView }: { experiences: readonly ExperienceEntry[]; isInView: boolean }) {
   return (
     <div className="lg:hidden relative ml-4 pl-8 sm:ml-6 sm:pl-10">
       {/* Timeline vertical line */}
@@ -227,6 +206,43 @@ export function Experience() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
 
+  const [experiences, setExperiences] = useState<readonly ExperienceEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchExperience() {
+      try {
+        const data = await getExperience();
+        if (!cancelled) {
+          setExperiences(data);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : 'Failed to load experience data';
+          setError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchExperience();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!isLoading && (error || experiences.length === 0)) {
+    return null;
+  }
+
   return (
     <section id="experience" className="section relative bg-gray-900/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -240,8 +256,14 @@ export function Experience() {
         />
 
         <div ref={ref}>
-          <DesktopTimeline experiences={experiences} isInView={isInView} />
-          <MobileTimeline experiences={experiences} isInView={isInView} />
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : (
+            <>
+              <DesktopTimeline experiences={experiences} isInView={isInView} />
+              <MobileTimeline experiences={experiences} isInView={isInView} />
+            </>
+          )}
         </div>
       </div>
     </section>

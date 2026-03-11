@@ -2,54 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react';
 import { SectionTitle } from '@/components/ui/SectionTitle';
-
-const testimonials = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    role: 'CTO',
-    company: 'TechStartup Inc.',
-    quote: 'Alex delivered an exceptional product that exceeded our expectations. The attention to detail and code quality was impressive. Our platform performance improved by 60% after the refactor.',
-    rating: 5,
-    avatar: 'SJ',
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    role: 'Product Manager',
-    company: 'DigitalVentures',
-    quote: 'Working with Alex was a fantastic experience. He understood our requirements perfectly and delivered on time. The UI he built is beautiful and our users love it.',
-    rating: 5,
-    avatar: 'MC',
-  },
-  {
-    id: '3',
-    name: 'Emily Rodriguez',
-    role: 'Founder',
-    company: 'GrowthLab',
-    quote: 'Alex is not just a developer — he is a problem solver. He brought ideas we had not even considered and the end product was far better than what we envisioned.',
-    rating: 5,
-    avatar: 'ER',
-  },
-  {
-    id: '4',
-    name: 'David Kim',
-    role: 'Engineering Director',
-    company: 'ScaleUp Corp',
-    quote: 'The backend architecture Alex designed for us has handled 10x growth without issues. His technical decisions were sound and well documented. Highly recommend.',
-    rating: 5,
-    avatar: 'DK',
-  },
-  {
-    id: '5',
-    name: 'Lisa Thompson',
-    role: 'Head of Design',
-    company: 'CreativeLab',
-    quote: 'Alex bridges the gap between design and development beautifully. He took our Figma mockups and brought them to life with perfect animations and pixel-perfect precision.',
-    rating: 5,
-    avatar: 'LT',
-  },
-];
+import { getTestimonials, type TestimonialEntry } from '@/lib/api';
 
 const AVATAR_COLORS = [
   'from-indigo-500 to-purple-600',
@@ -59,20 +12,94 @@ const AVATAR_COLORS = [
   'from-rose-500 to-pink-600',
 ];
 
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function LoadingSkeleton() {
+  return (
+    <section id="testimonials" className="section relative bg-gray-900/20">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] opacity-5"
+          style={{ background: 'radial-gradient(ellipse, #6366f1 0%, transparent 70%)' }}
+        />
+      </div>
+
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-12 lg:px-16">
+        <SectionTitle
+          number="05"
+          label="Testimonials"
+          title="What Clients Say"
+          subtitle="Kind words from people I have had the pleasure to work with."
+          align="center"
+          className="mb-16"
+        />
+
+        <div className="glass border border-white/5 rounded-2xl sm:rounded-3xl p-6 sm:p-12 text-center relative overflow-hidden">
+          <div className="flex justify-center gap-1 mb-6">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="w-[18px] h-[18px] rounded bg-slate-700/50 animate-pulse" />
+            ))}
+          </div>
+          <div className="space-y-3 mb-8 max-w-2xl mx-auto">
+            <div className="h-5 bg-slate-700/50 rounded animate-pulse" />
+            <div className="h-5 bg-slate-700/50 rounded animate-pulse w-5/6 mx-auto" />
+            <div className="h-5 bg-slate-700/50 rounded animate-pulse w-4/6 mx-auto" />
+          </div>
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-14 h-14 rounded-full bg-slate-700/50 animate-pulse" />
+            <div className="h-4 w-32 bg-slate-700/50 rounded animate-pulse" />
+            <div className="h-3 w-40 bg-slate-700/50 rounded animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function Testimonials() {
+  const [testimonials, setTestimonials] = useState<readonly TestimonialEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchData() {
+      try {
+        const data = await getTestimonials();
+        if (!cancelled) {
+          setTestimonials(data);
+          setIsLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+    return () => { cancelled = true; };
+  }, []);
+
   const next = useCallback(() => {
     setDirection(1);
     setActiveIndex((prev) => (prev + 1) % testimonials.length);
-  }, []);
+  }, [testimonials.length]);
 
   const prev = useCallback(() => {
     setDirection(-1);
     setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  }, []);
+  }, [testimonials.length]);
 
   const goTo = useCallback((index: number) => {
     setDirection(index > activeIndex ? 1 : -1);
@@ -85,9 +112,10 @@ export function Testimonials() {
   }, [next]);
 
   useEffect(() => {
+    if (testimonials.length === 0) return;
     restartInterval();
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [restartInterval]);
+  }, [restartInterval, testimonials.length]);
 
   const handleNavClick = useCallback((fn: () => void) => {
     fn();
@@ -113,6 +141,14 @@ export function Testimonials() {
       transition: { duration: 0.3 },
     }),
   };
+
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (testimonials.length === 0) {
+    return null;
+  }
 
   const active = testimonials[activeIndex];
 
@@ -169,11 +205,19 @@ export function Testimonials() {
               {/* Person */}
               <div className="flex flex-col items-center gap-3">
                 {/* Avatar */}
-                <div
-                  className={`w-14 h-14 rounded-full bg-gradient-to-br ${AVATAR_COLORS[activeIndex % AVATAR_COLORS.length]} flex items-center justify-center text-white font-bold text-lg`}
-                >
-                  {active.avatar}
-                </div>
+                {active.avatar_url ? (
+                  <img
+                    src={active.avatar_url}
+                    alt={active.name}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`w-14 h-14 rounded-full bg-gradient-to-br ${AVATAR_COLORS[activeIndex % AVATAR_COLORS.length]} flex items-center justify-center text-white font-bold text-lg`}
+                  >
+                    {getInitials(active.name)}
+                  </div>
+                )}
                 <div>
                   <div className="font-bold text-white">{active.name}</div>
                   <div className="text-sm text-slate-400">

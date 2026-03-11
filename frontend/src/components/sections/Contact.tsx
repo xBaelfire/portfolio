@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Mail, MapPin, Clock, Github, Linkedin, Twitter, Send, CheckCircle2, XCircle } from 'lucide-react';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { Button } from '@/components/ui/Button';
-import { sendContactMessage } from '@/lib/api';
+import { sendContactMessage, getSettings } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 const contactSchema = z.object({
@@ -20,32 +20,47 @@ type ContactFormData = z.infer<typeof contactSchema>;
 
 type SubmitStatus = 'idle' | 'loading' | 'success' | 'error';
 
-const contactInfo = [
-  {
-    icon: Mail,
-    label: 'Email',
-    value: 'hello@alexchen.dev',
-    href: 'mailto:hello@alexchen.dev',
-  },
-  {
-    icon: MapPin,
-    label: 'Location',
-    value: 'San Francisco, CA',
-    href: null,
-  },
-  {
-    icon: Clock,
-    label: 'Availability',
-    value: 'Mon–Fri, 9AM–6PM PST',
-    href: null,
-  },
-];
+const DEFAULT_EMAIL = 'hello@alexchen.dev';
+const DEFAULT_LOCATION = 'San Francisco, CA';
+const DEFAULT_HOURS = 'Mon\u2013Fri, 9AM\u20136PM PST';
+const DEFAULT_AVAILABILITY_TEXT = 'Open to freelance & full-time';
+const DEFAULT_SOCIAL = {
+  github: 'https://github.com',
+  linkedin: 'https://linkedin.com',
+  twitter: 'https://twitter.com',
+};
 
-const socialLinks = [
-  { icon: Github, href: 'https://github.com', label: 'GitHub' },
-  { icon: Linkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
-  { icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
-];
+function buildContactInfo(settings: Record<string, string>) {
+  const email = settings.contact_email || DEFAULT_EMAIL;
+  return [
+    {
+      icon: Mail,
+      label: 'Email',
+      value: email,
+      href: `mailto:${email}`,
+    },
+    {
+      icon: MapPin,
+      label: 'Location',
+      value: settings.contact_location || DEFAULT_LOCATION,
+      href: null as string | null,
+    },
+    {
+      icon: Clock,
+      label: 'Availability',
+      value: settings.contact_hours || DEFAULT_HOURS,
+      href: null as string | null,
+    },
+  ];
+}
+
+function buildSocialLinks(settings: Record<string, string>) {
+  return [
+    { icon: Github, href: settings.social_github || DEFAULT_SOCIAL.github, label: 'GitHub' },
+    { icon: Linkedin, href: settings.social_linkedin || DEFAULT_SOCIAL.linkedin, label: 'LinkedIn' },
+    { icon: Twitter, href: settings.social_twitter || DEFAULT_SOCIAL.twitter, label: 'Twitter' },
+  ];
+}
 
 function InputField({
   label,
@@ -77,6 +92,30 @@ export function Contact() {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSettings()
+      .then((data) => {
+        if (!cancelled) {
+          setSettings(data);
+          setSettingsLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSettingsLoaded(true);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const contactInfo = buildContactInfo(settings);
+  const socialLinks = buildSocialLinks(settings);
+  const availabilityStatus = settings.availability_status || 'Available for Work';
+  const availabilityText = settings.availability_text || DEFAULT_AVAILABILITY_TEXT;
 
   const {
     register,
@@ -105,7 +144,11 @@ export function Contact() {
   const inputClass = 'w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500/50 focus:bg-indigo-500/5 transition-all duration-200';
 
   return (
-    <section id="contact" className="section relative bg-gray-900/20">
+    <section
+      id="contact"
+      className="section relative bg-gray-900/20"
+      style={{ opacity: settingsLoaded ? 1 : 0.6, transition: 'opacity 0.4s ease-in-out' }}
+    >
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
@@ -137,8 +180,8 @@ export function Contact() {
             <div className="flex items-center gap-3 p-4 glass border border-green-500/20 rounded-2xl">
               <span className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
               <div>
-                <div className="text-sm font-semibold text-white">Available for Work</div>
-                <div className="text-xs text-slate-400">Open to freelance & full-time</div>
+                <div className="text-sm font-semibold text-white">{availabilityStatus}</div>
+                <div className="text-xs text-slate-400">{availabilityText}</div>
               </div>
             </div>
 

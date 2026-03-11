@@ -1,83 +1,67 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Search, Calendar, Clock, ArrowRight, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { formatDate } from '@/lib/utils';
+import { getPosts } from '@/lib/api';
+import type { BlogPost } from '@/types';
 
-const ALL_POSTS = [
-  {
-    id: '1',
-    slug: 'building-scalable-react-apps',
-    title: 'Building Scalable React Applications in 2025',
-    excerpt: 'Best practices for structuring large React codebases, state management patterns, and performance optimization techniques that scale.',
-    tags: ['React', 'TypeScript', 'Architecture'],
-    created_at: '2025-03-01',
-    read_time: 8,
-    gradient: 'from-indigo-900/60 to-purple-900/60',
-  },
-  {
-    id: '2',
-    slug: 'cloudflare-workers-guide',
-    title: 'The Complete Guide to Cloudflare Workers',
-    excerpt: 'Everything you need to know about deploying serverless applications at the edge with Cloudflare Workers, D1, and R2.',
-    tags: ['Cloudflare', 'Serverless', 'Edge Computing'],
-    created_at: '2025-02-15',
-    read_time: 12,
-    gradient: 'from-cyan-900/60 to-blue-900/60',
-  },
-  {
-    id: '3',
-    slug: 'modern-css-techniques',
-    title: 'Modern CSS Techniques Every Developer Should Know',
-    excerpt: 'A deep dive into container queries, CSS nesting, @layer, and other cutting-edge CSS features for building maintainable stylesheets.',
-    tags: ['CSS', 'Design', 'Frontend'],
-    created_at: '2025-01-28',
-    read_time: 6,
-    gradient: 'from-emerald-900/60 to-teal-900/60',
-  },
-  {
-    id: '4',
-    slug: 'postgresql-performance-tips',
-    title: 'PostgreSQL Performance Optimization Techniques',
-    excerpt: 'Practical tips for writing faster queries, using indexes effectively, and optimizing your PostgreSQL database for production workloads.',
-    tags: ['PostgreSQL', 'Backend', 'Performance'],
-    created_at: '2025-01-10',
-    read_time: 10,
-    gradient: 'from-blue-900/60 to-indigo-900/60',
-  },
-  {
-    id: '5',
-    slug: 'framer-motion-animations',
-    title: 'Advanced Animations with Framer Motion',
-    excerpt: 'Learn how to create stunning animations in React using Framer Motion\'s powerful animation primitives and layout animations.',
-    tags: ['React', 'Animation', 'Frontend'],
-    created_at: '2024-12-20',
-    read_time: 7,
-    gradient: 'from-rose-900/60 to-pink-900/60',
-  },
-  {
-    id: '6',
-    slug: 'docker-best-practices',
-    title: 'Docker Best Practices for Node.js Applications',
-    excerpt: 'How to write efficient Dockerfiles, reduce image sizes, and set up multi-stage builds for production Node.js deployments.',
-    tags: ['Docker', 'Node.js', 'DevOps'],
-    created_at: '2024-12-05',
-    read_time: 9,
-    gradient: 'from-orange-900/60 to-amber-900/60',
-  },
+const GRADIENT_CYCLE = [
+  'from-indigo-900/60 to-purple-900/60',
+  'from-cyan-900/60 to-blue-900/60',
+  'from-emerald-900/60 to-teal-900/60',
+  'from-blue-900/60 to-indigo-900/60',
+  'from-rose-900/60 to-pink-900/60',
+  'from-orange-900/60 to-amber-900/60',
 ];
 
-const ALL_TAGS = ['All', ...Array.from(new Set(ALL_POSTS.flatMap((p) => p.tags)))];
 const POSTS_PER_PAGE = 6;
 
 export function Blog() {
+  const [allPosts, setAllPosts] = useState<readonly BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [search, setSearch] = useState('');
   const [activeTag, setActiveTag] = useState('All');
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchPosts() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await getPosts({ published: true });
+        if (!cancelled) {
+          const data = Array.isArray(res) ? res : res.data;
+          setAllPosts(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : 'Failed to load posts';
+          setError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchPosts();
+    return () => { cancelled = true; };
+  }, []);
+
+  const allTags = useMemo(() => {
+    const tagSet = new Set(allPosts.flatMap((p) => p.tags));
+    return ['All', ...Array.from(tagSet)];
+  }, [allPosts]);
+
   const filtered = useMemo(() => {
-    let posts = ALL_POSTS;
+    let posts = [...allPosts];
     if (activeTag !== 'All') {
       posts = posts.filter((p) => p.tags.includes(activeTag));
     }
@@ -88,7 +72,7 @@ export function Blog() {
       );
     }
     return posts;
-  }, [search, activeTag]);
+  }, [allPosts, search, activeTag]);
 
   const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE);
   const displayed = filtered.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
@@ -142,7 +126,7 @@ export function Blog() {
 
           {/* Tags */}
           <div className="flex flex-wrap gap-2">
-            {ALL_TAGS.map((tag) => (
+            {allTags.map((tag) => (
               <motion.button
                 key={tag}
                 onClick={() => { setActiveTag(tag); setPage(1); }}
@@ -161,74 +145,114 @@ export function Blog() {
         </motion.div>
 
         {/* Results count */}
-        {search && (
+        {search && !loading && (
           <p className="text-sm text-slate-500 mb-6">
-            {filtered.length} result{filtered.length !== 1 ? 's' : ''} for "{search}"
+            {filtered.length} result{filtered.length !== 1 ? 's' : ''} for &quot;{search}&quot;
           </p>
         )}
 
-        {/* Posts grid */}
-        {displayed.length > 0 ? (
+        {/* Loading skeleton */}
+        {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {displayed.map((post, i) => (
-              <motion.article
-                key={post.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.07 }}
-                whileHover={{ y: -6 }}
-                className="group glass border border-white/5 rounded-2xl overflow-hidden hover:border-indigo-500/20 transition-colors"
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="glass border border-white/5 rounded-2xl overflow-hidden animate-pulse"
               >
-                {/* Cover */}
-                <div className={`relative h-44 bg-gradient-to-br ${post.gradient}`}>
-                  <div className="absolute inset-0 grid-bg opacity-30" />
-                  <div className="absolute bottom-4 left-4 flex flex-wrap gap-1.5">
-                    {post.tags.slice(0, 2).map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => { setActiveTag(tag); setPage(1); }}
-                        className="tag-pill hover:bg-indigo-500/20 transition-colors"
-                      >
-                        <Tag size={10} className="mr-1" />
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Content */}
+                <div className="h-44 bg-white/5" />
                 <div className="p-6 flex flex-col gap-3">
-                  <div className="flex items-center gap-4 text-xs text-slate-500">
-                    <span className="flex items-center gap-1.5">
-                      <Calendar size={11} />
-                      {formatDate(post.created_at, { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock size={11} />
-                      {post.read_time} min read
-                    </span>
+                  <div className="flex gap-4">
+                    <div className="h-3 w-20 bg-white/5 rounded" />
+                    <div className="h-3 w-16 bg-white/5 rounded" />
                   </div>
-
-                  <h2 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors leading-tight">
-                    {post.title}
-                  </h2>
-
-                  <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">
-                    {post.excerpt}
-                  </p>
-
-                  <Link
-                    to={`/blog/${post.slug}`}
-                    className="mt-1 flex items-center gap-1.5 text-sm text-indigo-400 hover:text-indigo-300 font-medium group/link transition-colors"
-                  >
-                    Read More
-                    <ArrowRight size={14} className="group-hover/link:translate-x-1 transition-transform" />
-                  </Link>
+                  <div className="h-4 w-3/4 bg-white/5 rounded" />
+                  <div className="h-3 w-full bg-white/5 rounded" />
+                  <div className="h-3 w-2/3 bg-white/5 rounded" />
                 </div>
-              </motion.article>
+              </div>
             ))}
           </div>
-        ) : (
+        )}
+
+        {/* Error state */}
+        {error && !loading && (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <h3 className="text-xl font-bold text-white mb-2">Unable to load articles</h3>
+            <p className="text-slate-400 mb-6">Something went wrong. Please try again later.</p>
+            <Button variant="ghost" onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
+        )}
+
+        {/* Posts grid */}
+        {!loading && !error && displayed.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {displayed.map((post, i) => {
+              const gradient = GRADIENT_CYCLE[i % GRADIENT_CYCLE.length];
+              return (
+                <motion.article
+                  key={post.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.07 }}
+                  whileHover={{ y: -6 }}
+                  className="group glass border border-white/5 rounded-2xl overflow-hidden hover:border-indigo-500/20 transition-colors"
+                >
+                  {/* Cover */}
+                  <div className={`relative h-44 bg-gradient-to-br ${gradient}`}>
+                    <div className="absolute inset-0 grid-bg opacity-30" />
+                    <div className="absolute bottom-4 left-4 flex flex-wrap gap-1.5">
+                      {post.tags.slice(0, 2).map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => { setActiveTag(tag); setPage(1); }}
+                          className="tag-pill hover:bg-indigo-500/20 transition-colors"
+                        >
+                          <Tag size={10} className="mr-1" />
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 flex flex-col gap-3">
+                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar size={11} />
+                        {formatDate(post.created_at, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Clock size={11} />
+                        {post.read_time} min read
+                      </span>
+                    </div>
+
+                    <h2 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors leading-tight">
+                      {post.title}
+                    </h2>
+
+                    <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">
+                      {post.excerpt}
+                    </p>
+
+                    <Link
+                      to={`/blog/${post.slug}`}
+                      className="mt-1 flex items-center gap-1.5 text-sm text-indigo-400 hover:text-indigo-300 font-medium group/link transition-colors"
+                    >
+                      Read More
+                      <ArrowRight size={14} className="group-hover/link:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </motion.article>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && displayed.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="text-4xl mb-4">🔍</div>
             <h3 className="text-xl font-bold text-white mb-2">No articles found</h3>
@@ -240,7 +264,7 @@ export function Blog() {
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {totalPages > 1 && !loading && (
           <div className="flex items-center justify-center gap-2">
             <Button
               variant="ghost"
