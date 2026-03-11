@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FolderKanban, FileText, MessageSquare, Eye, TrendingUp, Plus } from 'lucide-react';
+import { FolderKanban, FileText, MessageSquare, Eye, TrendingUp, Plus, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { getStats } from '@/lib/api';
@@ -19,6 +19,7 @@ const FALLBACK_STATS: DashboardStats = {
 const quickActions = [
   { label: 'New Project', href: '/admin/projects', icon: FolderKanban, color: 'from-indigo-500 to-purple-600' },
   { label: 'New Post', href: '/admin/posts', icon: FileText, color: 'from-cyan-500 to-blue-600' },
+  { label: 'Messages', href: '/admin/messages', icon: MessageSquare, color: 'from-emerald-500 to-teal-600' },
 ];
 
 function StatCard({
@@ -59,11 +60,15 @@ function StatCard({
 export function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>(FALLBACK_STATS);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     getStats()
       .then(setStats)
-      .catch(() => setStats(FALLBACK_STATS))
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to load stats');
+        setStats(FALLBACK_STATS);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -111,6 +116,24 @@ export function AdminDashboard() {
         <h2 className="text-2xl font-bold text-white">Welcome back, Admin</h2>
         <p className="text-slate-400 mt-1">Here's an overview of your portfolio.</p>
       </motion.div>
+
+      {/* Error banner */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 p-4 mb-6 bg-rose-500/10 border border-rose-500/20 rounded-xl text-sm text-rose-400"
+        >
+          <AlertCircle size={16} className="shrink-0" />
+          {error}
+          <button
+            onClick={() => { setIsLoading(true); setError(''); getStats().then(setStats).catch(() => setError('Failed to load stats')).finally(() => setIsLoading(false)); }}
+            className="ml-auto text-xs px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 transition-colors"
+          >
+            Retry
+          </button>
+        </motion.div>
+      )}
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">

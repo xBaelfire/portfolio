@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   FolderKanban,
   FileText,
+  MessageSquare,
   LogOut,
   Menu,
   ChevronRight,
@@ -15,6 +16,7 @@ const navLinks = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Projects', href: '/admin/projects', icon: FolderKanban },
   { label: 'Blog Posts', href: '/admin/posts', icon: FileText },
+  { label: 'Messages', href: '/admin/messages', icon: MessageSquare },
 ];
 
 interface AdminLayoutProps {

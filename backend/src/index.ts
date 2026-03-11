@@ -9,6 +9,7 @@ interface Bindings {
   ADMIN_EMAIL: string;
   ADMIN_PASSWORD_HASH: string;
   ENVIRONMENT: string;
+  R2_PUBLIC_URL?: string;
 }
 
 interface JWTPayload {
@@ -593,6 +594,86 @@ app.post('/api/contact', async (c) => {
   }
 });
 
+// ===== MESSAGES ROUTES (AUTH REQUIRED) =====
+app.get('/api/messages', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const url = new URL(c.req.url);
+  const page = parseInt(url.searchParams.get('page') ?? '1');
+  const per_page = parseInt(url.searchParams.get('per_page') ?? '20');
+  const offset = (page - 1) * per_page;
+
+  try {
+    const countResult = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM messages'
+    ).first<{ count: number }>();
+    const total = countResult?.count ?? 0;
+
+    const { results } = await c.env.DB.prepare(
+      'SELECT * FROM messages ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    ).bind(per_page, offset).all<Record<string, unknown>>();
+
+    const messages = results.map((m) => ({
+      ...m,
+      read: m.read === 1,
+    }));
+
+    return jsonSuccess({
+      data: messages,
+      total,
+      page,
+      per_page,
+      total_pages: Math.ceil(total / per_page),
+    });
+  } catch {
+    return jsonError('Failed to fetch messages', 500);
+  }
+});
+
+app.put('/api/messages/:id/read', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const id = c.req.param('id');
+
+  try {
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM messages WHERE id = ?'
+    ).bind(id).first<{ id: string }>();
+
+    if (!existing) return jsonError('Message not found', 404);
+
+    await c.env.DB.prepare(
+      'UPDATE messages SET read = 1 WHERE id = ?'
+    ).bind(id).run();
+
+    return jsonSuccess({ id, read: true });
+  } catch {
+    return jsonError('Failed to mark message as read', 500);
+  }
+});
+
+app.delete('/api/messages/:id', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const id = c.req.param('id');
+
+  try {
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM messages WHERE id = ?'
+    ).bind(id).first<{ id: string }>();
+
+    if (!existing) return jsonError('Message not found', 404);
+
+    await c.env.DB.prepare('DELETE FROM messages WHERE id = ?').bind(id).run();
+    return jsonSuccess(null);
+  } catch {
+    return jsonError('Failed to delete message', 500);
+  }
+});
+
 // ===== STATS ROUTE =====
 app.get('/api/stats', async (c) => {
   const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
@@ -651,7 +732,8 @@ app.post('/api/upload', async (c) => {
       httpMetadata: { contentType: file.type },
     });
 
-    const publicUrl = `https://pub-REPLACE_WITH_YOUR_BUCKET_ID.r2.dev/${key}`;
+    const r2Base = c.env.R2_PUBLIC_URL ?? '';
+    const publicUrl = `${r2Base}${r2Base && !r2Base.endsWith('/') ? '/' : ''}${key}`;
 
     return jsonSuccess({ url: publicUrl, key });
   } catch {

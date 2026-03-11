@@ -3,6 +3,7 @@ import type {
   Project,
   BlogPost,
   ContactForm,
+  ContactMessage,
   ApiResponse,
   PaginatedResponse,
   DashboardStats,
@@ -153,5 +154,29 @@ export async function sendContactMessage(
   return apiRequest<ApiResponse<null>>('/api/contact', {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+}
+
+// ===== MESSAGES API (Admin) =====
+export async function getMessages(params?: {
+  page?: number;
+  per_page?: number;
+}): Promise<PaginatedResponse<ContactMessage>> {
+  const query = new URLSearchParams();
+  if (params?.page) query.set('page', String(params.page));
+  if (params?.per_page) query.set('per_page', String(params.per_page));
+  const qs = query.toString();
+  return apiRequest<PaginatedResponse<ContactMessage>>(`/api/messages${qs ? `?${qs}` : ''}`);
+}
+
+export async function markMessageAsRead(id: string): Promise<ApiResponse<null>> {
+  return apiRequest<ApiResponse<null>>(`/api/messages/${id}/read`, {
+    method: 'PUT',
+  });
+}
+
+export async function deleteMessage(id: string): Promise<ApiResponse<null>> {
+  return apiRequest<ApiResponse<null>>(`/api/messages/${id}`, {
+    method: 'DELETE',
   });
 }

@@ -25,14 +25,26 @@ import { AdminLogin } from '@/pages/admin/AdminLogin';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminProjects } from '@/pages/admin/AdminProjects';
 import { AdminPosts } from '@/pages/admin/AdminPosts';
+import { AdminMessages } from '@/pages/admin/AdminMessages';
 
 // Styles
 import './index.css';
 
 // ===== PROTECTED ROUTE =====
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp < Math.floor(Date.now() / 1000);
+  } catch {
+    return true;
+  }
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('admin_token');
-  if (!token) {
+  if (!token || isTokenExpired(token)) {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
     return <Navigate to="/admin" replace />;
   }
   return <>{children}</>;
@@ -151,6 +163,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <AdminPosts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/messages"
+            element={
+              <ProtectedRoute>
+                <AdminMessages />
               </ProtectedRoute>
             }
           />

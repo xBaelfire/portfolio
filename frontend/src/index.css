@@ -292,7 +292,6 @@
   }
 
   .admin-main {
-    margin-left: 260px;
     min-height: 100vh;
     background: var(--bg-primary);
   }
