@@ -98,7 +98,14 @@ export async function apiRequest<T>(
     throw new Error((errorData as { error?: string }).error ?? `HTTP error ${response.status}`);
   }
 
-  return response.json() as Promise<T>;
+  const json = await response.json() as { success?: boolean; data?: T } | T;
+
+  // Unwrap { success, data } envelope from the backend
+  if (json && typeof json === 'object' && 'success' in json && 'data' in json) {
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
 // ===== READ TIME CALCULATOR =====
