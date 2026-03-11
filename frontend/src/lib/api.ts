@@ -56,6 +56,52 @@ export async function deleteProject(id: string): Promise<ApiResponse<null>> {
   });
 }
 
+// ===== EXPERIENCE API =====
+export interface ExperienceEntry {
+  readonly id: string;
+  readonly company: string;
+  readonly role: string;
+  readonly start_date: string;
+  readonly end_date: string | null;
+  readonly is_current: boolean;
+  readonly location: string;
+  readonly description: string;
+  readonly tech_stack: string[];
+  readonly company_url: string;
+  readonly sort_order: number;
+  readonly created_at: string;
+  readonly updated_at: string;
+}
+
+export async function getExperience(): Promise<PaginatedResponse<ExperienceEntry>> {
+  return apiRequest<PaginatedResponse<ExperienceEntry>>('/api/experience');
+}
+
+export async function createExperience(
+  data: Omit<ExperienceEntry, 'id' | 'created_at' | 'updated_at'>
+): Promise<ApiResponse<ExperienceEntry>> {
+  return apiRequest<ApiResponse<ExperienceEntry>>('/api/experience', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateExperience(
+  id: string,
+  data: Partial<Omit<ExperienceEntry, 'id' | 'created_at' | 'updated_at'>>
+): Promise<ApiResponse<ExperienceEntry>> {
+  return apiRequest<ApiResponse<ExperienceEntry>>(`/api/experience/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteExperience(id: string): Promise<ApiResponse<null>> {
+  return apiRequest<ApiResponse<null>>(`/api/experience/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 // ===== BLOG POSTS API =====
 export async function getPosts(params?: {
   tag?: string;
@@ -178,5 +224,100 @@ export async function markMessageAsRead(id: string): Promise<ApiResponse<null>> 
 export async function deleteMessage(id: string): Promise<ApiResponse<null>> {
   return apiRequest<ApiResponse<null>>(`/api/messages/${id}`, {
     method: 'DELETE',
+  });
+}
+
+// ===== TESTIMONIALS API =====
+export interface TestimonialEntry {
+  readonly id: string;
+  readonly name: string;
+  readonly role: string;
+  readonly company: string;
+  readonly quote: string;
+  readonly rating: number;
+  readonly avatar_url: string;
+  readonly sort_order: number;
+  readonly created_at: string;
+}
+
+export async function getTestimonials(): Promise<TestimonialEntry[]> {
+  return apiRequest<TestimonialEntry[]>('/api/testimonials');
+}
+
+export async function createTestimonial(
+  data: Omit<TestimonialEntry, 'id' | 'created_at'>
+): Promise<ApiResponse<TestimonialEntry>> {
+  return apiRequest<ApiResponse<TestimonialEntry>>('/api/testimonials', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateTestimonial(
+  id: string,
+  data: Partial<Omit<TestimonialEntry, 'id' | 'created_at'>>
+): Promise<ApiResponse<TestimonialEntry>> {
+  return apiRequest<ApiResponse<TestimonialEntry>>(`/api/testimonials/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteTestimonial(id: string): Promise<ApiResponse<null>> {
+  return apiRequest<ApiResponse<null>>(`/api/testimonials/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+// ===== SKILLS API =====
+export interface SkillEntry {
+  readonly id: string;
+  readonly name: string;
+  readonly icon: string;
+  readonly proficiency: number;
+  readonly category: 'frontend' | 'backend' | 'tools' | 'design';
+  readonly color: string;
+  readonly sort_order: number;
+  readonly created_at: string;
+}
+
+export async function getSkills(): Promise<SkillEntry[]> {
+  return apiRequest<SkillEntry[]>('/api/skills');
+}
+
+export async function createSkill(
+  data: Omit<SkillEntry, 'id' | 'created_at'>
+): Promise<ApiResponse<SkillEntry>> {
+  return apiRequest<ApiResponse<SkillEntry>>('/api/skills', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateSkill(
+  id: string,
+  data: Partial<Omit<SkillEntry, 'id' | 'created_at'>>
+): Promise<ApiResponse<SkillEntry>> {
+  return apiRequest<ApiResponse<SkillEntry>>(`/api/skills/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteSkill(id: string): Promise<ApiResponse<null>> {
+  return apiRequest<ApiResponse<null>>(`/api/skills/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+// ===== SETTINGS API =====
+export async function getSettings(): Promise<Record<string, string>> {
+  return apiRequest<Record<string, string>>('/api/settings');
+}
+
+export async function updateSettings(settings: Record<string, string>): Promise<void> {
+  await apiRequest<void>('/api/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
   });
 }

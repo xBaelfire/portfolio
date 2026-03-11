@@ -741,13 +741,431 @@ app.post('/api/upload', async (c) => {
   }
 });
 
+// ===== TESTIMONIALS ROUTES =====
+app.get('/api/testimonials', async (c) => {
+  try {
+    const { results } = await c.env.DB.prepare(
+      'SELECT * FROM testimonials ORDER BY sort_order ASC'
+    ).all<Record<string, unknown>>();
+
+    return jsonSuccess(results);
+  } catch {
+    return jsonError('Failed to fetch testimonials', 500);
+  }
+});
+
+app.post('/api/testimonials', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const body = await c.req.json<{
+    name: string;
+    role: string;
+    company: string;
+    quote: string;
+    rating?: number;
+    avatar_url?: string;
+    sort_order?: number;
+  }>();
+
+  if (!body.name || !body.role || !body.company || !body.quote) {
+    return jsonError('Name, role, company, and quote are required', 400);
+  }
+
+  const id = generateId();
+  const now = new Date().toISOString();
+
+  try {
+    await c.env.DB.prepare(`
+      INSERT INTO testimonials (id, name, role, company, quote, rating, avatar_url, sort_order, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id,
+      body.name,
+      body.role,
+      body.company,
+      body.quote,
+      body.rating ?? 5,
+      body.avatar_url ?? '',
+      body.sort_order ?? 0,
+      now
+    ).run();
+
+    return jsonSuccess({ id, ...body, created_at: now }, 201);
+  } catch {
+    return jsonError('Failed to create testimonial', 500);
+  }
+});
+
+app.put('/api/testimonials/:id', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const id = c.req.param('id');
+  const body = await c.req.json<Partial<{
+    name: string;
+    role: string;
+    company: string;
+    quote: string;
+    rating: number;
+    avatar_url: string;
+    sort_order: number;
+  }>>();
+
+  try {
+    await c.env.DB.prepare(`
+      UPDATE testimonials
+      SET name = COALESCE(?, name),
+          role = COALESCE(?, role),
+          company = COALESCE(?, company),
+          quote = COALESCE(?, quote),
+          rating = COALESCE(?, rating),
+          avatar_url = COALESCE(?, avatar_url),
+          sort_order = COALESCE(?, sort_order)
+      WHERE id = ?
+    `).bind(
+      body.name ?? null,
+      body.role ?? null,
+      body.company ?? null,
+      body.quote ?? null,
+      body.rating ?? null,
+      body.avatar_url ?? null,
+      body.sort_order ?? null,
+      id
+    ).run();
+
+    return jsonSuccess({ id });
+  } catch {
+    return jsonError('Failed to update testimonial', 500);
+  }
+});
+
+app.delete('/api/testimonials/:id', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const id = c.req.param('id');
+
+  try {
+    await c.env.DB.prepare('DELETE FROM testimonials WHERE id = ?').bind(id).run();
+    return jsonSuccess(null);
+  } catch {
+    return jsonError('Failed to delete testimonial', 500);
+  }
+});
+
+// ===== EXPERIENCE ROUTES =====
+app.get('/api/experience', async (c) => {
+  try {
+    const { results } = await c.env.DB.prepare(
+      'SELECT * FROM experience ORDER BY sort_order ASC'
+    ).all<Record<string, unknown>>();
+
+    const experience = results.map((e) => ({
+      ...e,
+      tech_stack: JSON.parse((e.tech_stack as string) || '[]') as string[],
+      is_current: e.is_current === 1,
+    }));
+
+    return jsonSuccess(experience);
+  } catch {
+    return jsonError('Failed to fetch experience', 500);
+  }
+});
+
+app.post('/api/experience', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const body = await c.req.json<{
+    company: string;
+    role: string;
+    start_date: string;
+    end_date?: string;
+    is_current?: boolean;
+    location?: string;
+    description?: string;
+    tech_stack?: string[];
+    company_url?: string;
+    sort_order?: number;
+  }>();
+
+  if (!body.company || !body.role || !body.start_date) {
+    return jsonError('Company, role, and start_date are required', 400);
+  }
+
+  const id = generateId();
+  const now = new Date().toISOString();
+
+  try {
+    await c.env.DB.prepare(`
+      INSERT INTO experience (id, company, role, start_date, end_date, is_current, location, description, tech_stack, company_url, sort_order, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id,
+      body.company,
+      body.role,
+      body.start_date,
+      body.end_date ?? null,
+      body.is_current ? 1 : 0,
+      body.location ?? '',
+      body.description ?? '',
+      JSON.stringify(body.tech_stack ?? []),
+      body.company_url ?? '',
+      body.sort_order ?? 0,
+      now,
+      now
+    ).run();
+
+    return jsonSuccess({ id, ...body, created_at: now, updated_at: now }, 201);
+  } catch {
+    return jsonError('Failed to create experience', 500);
+  }
+});
+
+app.put('/api/experience/:id', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const id = c.req.param('id');
+  const body = await c.req.json<Partial<{
+    company: string;
+    role: string;
+    start_date: string;
+    end_date: string;
+    is_current: boolean;
+    location: string;
+    description: string;
+    tech_stack: string[];
+    company_url: string;
+    sort_order: number;
+  }>>();
+
+  const now = new Date().toISOString();
+
+  try {
+    await c.env.DB.prepare(`
+      UPDATE experience
+      SET company = COALESCE(?, company),
+          role = COALESCE(?, role),
+          start_date = COALESCE(?, start_date),
+          end_date = COALESCE(?, end_date),
+          is_current = COALESCE(?, is_current),
+          location = COALESCE(?, location),
+          description = COALESCE(?, description),
+          tech_stack = COALESCE(?, tech_stack),
+          company_url = COALESCE(?, company_url),
+          sort_order = COALESCE(?, sort_order),
+          updated_at = ?
+      WHERE id = ?
+    `).bind(
+      body.company ?? null,
+      body.role ?? null,
+      body.start_date ?? null,
+      body.end_date ?? null,
+      body.is_current !== undefined ? (body.is_current ? 1 : 0) : null,
+      body.location ?? null,
+      body.description ?? null,
+      body.tech_stack ? JSON.stringify(body.tech_stack) : null,
+      body.company_url ?? null,
+      body.sort_order ?? null,
+      now,
+      id
+    ).run();
+
+    return jsonSuccess({ id, updated_at: now });
+  } catch {
+    return jsonError('Failed to update experience', 500);
+  }
+});
+
+app.delete('/api/experience/:id', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const id = c.req.param('id');
+
+  try {
+    await c.env.DB.prepare('DELETE FROM experience WHERE id = ?').bind(id).run();
+    return jsonSuccess(null);
+  } catch {
+    return jsonError('Failed to delete experience', 500);
+  }
+});
+
+// ===== SKILLS ROUTES =====
+app.get('/api/skills', async (c) => {
+  try {
+    const { results } = await c.env.DB.prepare(
+      'SELECT * FROM skills ORDER BY category ASC, sort_order ASC'
+    ).all<Record<string, unknown>>();
+
+    return jsonSuccess(results);
+  } catch {
+    return jsonError('Failed to fetch skills', 500);
+  }
+});
+
+app.post('/api/skills', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const body = await c.req.json<{
+    name: string;
+    icon?: string;
+    proficiency?: number;
+    category: string;
+    color?: string;
+    sort_order?: number;
+  }>();
+
+  if (!body.name || !body.category) {
+    return jsonError('Name and category are required', 400);
+  }
+
+  const validCategories = ['frontend', 'backend', 'tools', 'design'];
+  if (!validCategories.includes(body.category)) {
+    return jsonError('Category must be one of: frontend, backend, tools, design', 400);
+  }
+
+  const id = generateId();
+  const now = new Date().toISOString();
+
+  try {
+    await c.env.DB.prepare(`
+      INSERT INTO skills (id, name, icon, proficiency, category, color, sort_order, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id,
+      body.name,
+      body.icon ?? '',
+      body.proficiency ?? 50,
+      body.category,
+      body.color ?? '#6366f1',
+      body.sort_order ?? 0,
+      now
+    ).run();
+
+    return jsonSuccess({ id, ...body, created_at: now }, 201);
+  } catch {
+    return jsonError('Failed to create skill', 500);
+  }
+});
+
+app.put('/api/skills/:id', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const id = c.req.param('id');
+  const body = await c.req.json<Partial<{
+    name: string;
+    icon: string;
+    proficiency: number;
+    category: string;
+    color: string;
+    sort_order: number;
+  }>>();
+
+  if (body.category !== undefined) {
+    const validCategories = ['frontend', 'backend', 'tools', 'design'];
+    if (!validCategories.includes(body.category)) {
+      return jsonError('Category must be one of: frontend, backend, tools, design', 400);
+    }
+  }
+
+  try {
+    await c.env.DB.prepare(`
+      UPDATE skills
+      SET name = COALESCE(?, name),
+          icon = COALESCE(?, icon),
+          proficiency = COALESCE(?, proficiency),
+          category = COALESCE(?, category),
+          color = COALESCE(?, color),
+          sort_order = COALESCE(?, sort_order)
+      WHERE id = ?
+    `).bind(
+      body.name ?? null,
+      body.icon ?? null,
+      body.proficiency ?? null,
+      body.category ?? null,
+      body.color ?? null,
+      body.sort_order ?? null,
+      id
+    ).run();
+
+    return jsonSuccess({ id });
+  } catch {
+    return jsonError('Failed to update skill', 500);
+  }
+});
+
+app.delete('/api/skills/:id', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const id = c.req.param('id');
+
+  try {
+    await c.env.DB.prepare('DELETE FROM skills WHERE id = ?').bind(id).run();
+    return jsonSuccess(null);
+  } catch {
+    return jsonError('Failed to delete skill', 500);
+  }
+});
+
+// ===== SETTINGS ROUTES =====
+app.get('/api/settings', async (c) => {
+  try {
+    const { results } = await c.env.DB.prepare(
+      'SELECT key, value FROM settings'
+    ).all<{ key: string; value: string }>();
+
+    const settingsMap: Record<string, string> = {};
+    for (const row of results) {
+      settingsMap[row.key] = row.value;
+    }
+
+    return jsonSuccess(settingsMap);
+  } catch {
+    return jsonError('Failed to fetch settings', 500);
+  }
+});
+
+app.put('/api/settings', async (c) => {
+  const authResult = await requireAuth(c as Parameters<typeof requireAuth>[0], async () => {});
+  if (authResult) return authResult;
+
+  const body = await c.req.json<Record<string, string>>();
+
+  if (!body || typeof body !== 'object') {
+    return jsonError('Request body must be an object of key-value pairs', 400);
+  }
+
+  const now = new Date().toISOString();
+
+  try {
+    const entries = Object.entries(body);
+    for (const [key, value] of entries) {
+      await c.env.DB.prepare(`
+        INSERT INTO settings (key, value, updated_at)
+        VALUES (?, ?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = ?
+      `).bind(key, String(value), now, String(value), now).run();
+    }
+
+    return jsonSuccess({ updated: entries.length });
+  } catch {
+    return jsonError('Failed to update settings', 500);
+  }
+});
+
 // ===== 404 FALLBACK =====
-app.notFound((c) => {
+app.notFound(() => {
   return jsonError('Route not found', 404);
 });
 
 // ===== ERROR HANDLER =====
-app.onError((err, c) => {
+app.onError((err) => {
   console.error('Worker error:', err.message);
   return jsonError('Internal server error', 500);
 });

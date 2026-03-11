@@ -6,6 +6,10 @@ import {
   FolderKanban,
   FileText,
   MessageSquare,
+  Quote,
+  Briefcase,
+  Layers,
+  Settings,
   LogOut,
   Menu,
   ChevronRight,
@@ -17,6 +21,10 @@ const navLinks = [
   { label: 'Projects', href: '/admin/projects', icon: FolderKanban },
   { label: 'Blog Posts', href: '/admin/posts', icon: FileText },
   { label: 'Messages', href: '/admin/messages', icon: MessageSquare },
+  { label: 'Testimonials', href: '/admin/testimonials', icon: Quote },
+  { label: 'Experience', href: '/admin/experience', icon: Briefcase },
+  { label: 'Skills', href: '/admin/skills', icon: Layers },
+  { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 interface AdminLayoutProps {
@@ -130,7 +138,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
       </AnimatePresence>
 
       {/* Main content */}
-      <div className="admin-main flex-1">
+      <div className="admin-main flex-1 lg:ml-[260px]">
         {/* Top bar */}
         <div className="admin-topbar flex items-center justify-between px-6">
           <div className="flex items-center gap-4">

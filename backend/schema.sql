@@ -52,6 +52,62 @@ CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at);
 CREATE INDEX IF NOT EXISTS idx_messages_read ON messages(read);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
 
+-- Testimonials
+CREATE TABLE IF NOT EXISTS testimonials (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL,
+  company TEXT NOT NULL,
+  quote TEXT NOT NULL,
+  rating INTEGER DEFAULT 5,
+  avatar_url TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_testimonials_sort_order ON testimonials(sort_order);
+
+-- Experience
+CREATE TABLE IF NOT EXISTS experience (
+  id TEXT PRIMARY KEY,
+  company TEXT NOT NULL,
+  role TEXT NOT NULL,
+  start_date TEXT NOT NULL,
+  end_date TEXT,
+  is_current INTEGER DEFAULT 0,
+  location TEXT DEFAULT '',
+  description TEXT DEFAULT '',
+  tech_stack TEXT DEFAULT '[]',
+  company_url TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_experience_sort_order ON experience(sort_order);
+
+-- Skills
+CREATE TABLE IF NOT EXISTS skills (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  icon TEXT DEFAULT '',
+  proficiency INTEGER DEFAULT 50,
+  category TEXT NOT NULL,
+  color TEXT DEFAULT '#6366f1',
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_skills_category ON skills(category);
+CREATE INDEX IF NOT EXISTS idx_skills_sort_order ON skills(sort_order);
+
+-- Settings
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 -- Seed data: Sample projects
 INSERT OR IGNORE INTO projects (id, title, slug, description, long_description, tech_stack, category, featured, created_at, updated_at)
 VALUES

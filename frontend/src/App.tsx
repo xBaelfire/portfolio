@@ -26,6 +26,10 @@ import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { AdminProjects } from '@/pages/admin/AdminProjects';
 import { AdminPosts } from '@/pages/admin/AdminPosts';
 import { AdminMessages } from '@/pages/admin/AdminMessages';
+import { AdminTestimonials } from '@/pages/admin/AdminTestimonials';
+import { AdminExperience } from '@/pages/admin/AdminExperience';
+import { AdminSkills } from '@/pages/admin/AdminSkills';
+import { AdminSettings } from '@/pages/admin/AdminSettings';
 
 // Styles
 import './index.css';
@@ -171,6 +175,38 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <AdminMessages />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/testimonials"
+            element={
+              <ProtectedRoute>
+                <AdminTestimonials />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/experience"
+            element={
+              <ProtectedRoute>
+                <AdminExperience />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/skills"
+            element={
+              <ProtectedRoute>
+                <AdminSkills />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute>
+                <AdminSettings />
               </ProtectedRoute>
             }
           />
