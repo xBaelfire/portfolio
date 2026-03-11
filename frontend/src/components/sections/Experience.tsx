@@ -114,20 +114,18 @@ function ExperienceCard({
 
 function DesktopTimeline({ experiences: items, isInView }: { experiences: typeof experiences; isInView: boolean }) {
   return (
-    <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] gap-x-8">
-      {/* Timeline vertical line - positioned in the center column */}
-      <div className="col-start-2 row-start-1 row-end-[-1] flex justify-center">
-        <motion.div
-          initial={{ scaleY: 0 }}
-          animate={isInView ? { scaleY: 1 } : {}}
-          transition={{ duration: 1.5, ease: "easeOut" as const }}
-          className="w-0.5 h-full"
-          style={{
-            background: 'linear-gradient(180deg, #6366f1, #8b5cf6, rgba(99,102,241,0.1))',
-            transformOrigin: 'top',
-          }}
-        />
-      </div>
+    <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] gap-x-8 relative">
+      {/* Timeline vertical line - absolute so it spans full height */}
+      <motion.div
+        initial={{ scaleY: 0 }}
+        animate={isInView ? { scaleY: 1 } : {}}
+        transition={{ duration: 1.5, ease: "easeOut" as const }}
+        className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2"
+        style={{
+          background: 'linear-gradient(180deg, #6366f1, #8b5cf6, rgba(99,102,241,0.1))',
+          transformOrigin: 'top',
+        }}
+      />
 
       {items.map((exp, i) => {
         const isLeft = i % 2 === 0;
