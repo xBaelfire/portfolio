@@ -63,36 +63,47 @@ app.use(
 
 // ===== AUTH ROUTE =====
 app.post('/api/auth/login', async (c) => {
-  const body = await c.req.json<{ email: string; password: string }>();
+  try {
+    const body = await c.req.json<{ email: string; password: string }>();
 
-  if (!body.email || !body.password) {
-    return jsonError('Email and password are required', 400);
-  }
+    if (!body.email || !body.password) {
+      return jsonError('Email and password are required', 400);
+    }
 
-  const adminEmail = c.env.ADMIN_EMAIL;
-  const adminHash = c.env.ADMIN_PASSWORD_HASH;
+    const adminEmail = (c.env.ADMIN_EMAIL ?? '').trim();
+    const adminHash = (c.env.ADMIN_PASSWORD_HASH ?? '').trim();
 
-  if (body.email !== adminEmail) {
-    return jsonError('Invalid credentials', 401);
-  }
-
-  const isValid = await verifyPassword(body.password, adminHash);
-  if (!isValid) {
-    // Also allow plaintext comparison for development
-    const devMatch = body.password === adminHash;
-    if (!devMatch) {
+    if (body.email !== adminEmail) {
       return jsonError('Invalid credentials', 401);
     }
+
+    const isValid = await verifyPassword(body.password, adminHash);
+    if (!isValid) {
+      // Also allow plaintext comparison for development
+      const devMatch = body.password === adminHash;
+      if (!devMatch) {
+        return jsonError('Invalid credentials', 401);
+      }
+    }
+
+    const payload: JWTPayload = {
+      email: body.email,
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24 hours
+    };
+
+    const jwtSecret = (c.env.JWT_SECRET ?? '').trim();
+    if (!jwtSecret) {
+      return jsonError('Server misconfiguration: JWT secret not set', 500);
+    }
+
+    const token = await generateJWT(payload, jwtSecret);
+
+    return jsonSuccess({ token, email: body.email });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Login failed';
+    console.error('Login error:', message);
+    return jsonError('Login failed', 500);
   }
-
-  const payload: JWTPayload = {
-    email: body.email,
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24 hours
-  };
-
-  const token = await generateJWT(payload, c.env.JWT_SECRET);
-
-  return jsonSuccess({ token, email: body.email });
 });
 
 // JWT helper (manual implementation for CF Workers compatibility)
