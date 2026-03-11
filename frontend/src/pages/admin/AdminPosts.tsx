@@ -36,6 +36,7 @@ function PostModal({
     watch,
     formState: { errors, isSubmitting },
   } = useForm<PostFormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(postSchema) as any,
     defaultValues: post
       ? {

@@ -39,6 +39,7 @@ function ProjectModal({
     formState: { errors, isSubmitting },
     watch,
   } = useForm<ProjectFormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(projectSchema) as any,
     defaultValues: project
       ? {

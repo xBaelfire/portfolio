@@ -22,16 +22,13 @@ interface AdminLayoutProps {
   title: string;
 }
 
-export function AdminLayout({ children, title }: AdminLayoutProps) {
-  const navigate = useNavigate();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+interface SidebarContentProps {
+  onLinkClick: () => void;
+  onLogout: () => void;
+}
 
-  const handleLogout = () => {
-    logout();
-    navigate('/admin');
-  };
-
-  const SidebarContent = () => (
+function SidebarContent({ onLinkClick, onLogout }: SidebarContentProps) {
+  return (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-6 py-6 border-b border-white/5">
@@ -52,7 +49,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
           <NavLink
             key={href}
             to={href}
-            onClick={() => setIsMobileOpen(false)}
+            onClick={onLinkClick}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
                 isActive
@@ -77,7 +74,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
       {/* Logout */}
       <div className="px-3 py-4 border-t border-white/5">
         <button
-          onClick={handleLogout}
+          onClick={onLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-red-500/10 hover:border hover:border-red-500/20 transition-all duration-200"
         >
           <LogOut size={16} />
@@ -86,12 +83,22 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
       </div>
     </div>
   );
+}
+
+export function AdminLayout({ children, title }: AdminLayoutProps) {
+  const navigate = useNavigate();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/admin');
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 flex">
       {/* Desktop Sidebar */}
       <aside className="admin-sidebar hidden lg:block">
-        <SidebarContent />
+        <SidebarContent onLinkClick={() => setIsMobileOpen(false)} onLogout={handleLogout} />
       </aside>
 
       {/* Mobile Sidebar */}
@@ -114,7 +121,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               className="absolute left-0 top-0 bottom-0 w-64 bg-gray-900 border-r border-white/5 z-10"
             >
-              <SidebarContent />
+              <SidebarContent onLinkClick={() => setIsMobileOpen(false)} onLogout={handleLogout} />
             </motion.div>
           </motion.div>
         )}

@@ -62,7 +62,7 @@ const AVATAR_COLORS = [
 export function Testimonials() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>(null!);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const next = useCallback(() => {
     setDirection(1);
@@ -79,16 +79,20 @@ export function Testimonials() {
     setActiveIndex(index);
   }, [activeIndex]);
 
-  useEffect(() => {
+  const restartInterval = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(next, 5000);
-    return () => clearInterval(intervalRef.current);
   }, [next]);
 
-  const handleNavClick = (fn: () => void) => {
-    clearInterval(intervalRef.current);
+  useEffect(() => {
+    restartInterval();
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [restartInterval]);
+
+  const handleNavClick = useCallback((fn: () => void) => {
     fn();
-    intervalRef.current = setInterval(next, 5000);
-  };
+    restartInterval();
+  }, [restartInterval]);
 
   const variants = {
     enter: (dir: number) => ({

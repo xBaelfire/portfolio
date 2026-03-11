@@ -109,7 +109,7 @@ export function Contact() {
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute bottom-0 left-1/4 w-96 h-96 opacity-8"
+          className="absolute bottom-0 left-1/4 w-96 h-96 opacity-[0.08]"
           style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)' }}
         />
       </div>

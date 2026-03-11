@@ -60,8 +60,10 @@ export function Hero() {
           setDisplayedRole(displayedRole.slice(0, -1));
         }, 30);
       } else {
-        setRoleIndex((prev) => (prev + 1) % roles.length);
-        setIsTyping(true);
+        timeout = setTimeout(() => {
+          setRoleIndex((prev) => (prev + 1) % roles.length);
+          setIsTyping(true);
+        }, 0);
       }
     }
 

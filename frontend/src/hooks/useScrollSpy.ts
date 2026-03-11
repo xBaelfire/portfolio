@@ -26,9 +26,10 @@ export function useScrollSpy(
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
+    const initialTimer = setTimeout(handleScroll, 0);
 
     return () => {
+      clearTimeout(initialTimer);
       window.removeEventListener('scroll', handleScroll);
     };
   }, [handleScroll]);

@@ -38,7 +38,7 @@ export function useSmoothScroll(): { lenis: Lenis | null } {
     };
   }, []);
 
-  return { lenis: lenisRef.current };
+  return { lenis: lenisInstance };
 }
 
 export function getLenis(): Lenis | null {

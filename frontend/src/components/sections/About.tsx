@@ -38,7 +38,7 @@ export function About() {
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute top-1/2 right-0 w-80 h-80 -translate-y-1/2 opacity-8"
+          className="absolute top-1/2 right-0 w-80 h-80 -translate-y-1/2 opacity-[0.08]"
           style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)' }}
         />
       </div>
