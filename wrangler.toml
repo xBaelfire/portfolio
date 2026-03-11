@@ -1,5 +1,10 @@
+# Root wrangler.toml — used for Cloudflare Pages binding config
+# The Worker is configured in backend/wrangler.toml
+# Deploy the worker from the backend/ directory: cd backend && wrangler deploy
+# Deploy the frontend Pages from root: wrangler pages deploy frontend/dist
+
 name = "portfolio-worker"
-main = "worker/src/index.ts"
+main = "backend/src/index.ts"
 compatibility_date = "2024-01-01"
 
 [[d1_databases]]
