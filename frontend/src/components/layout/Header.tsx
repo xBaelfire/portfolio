@@ -98,7 +98,7 @@ export function Header() {
               className="hidden sm:flex"
               onClick={() => handleNavClick('contact')}
             >
-              Hire Me
+              Contact Me
             </Button>
 
             <motion.button
@@ -175,7 +175,7 @@ export function Header() {
                   className="w-full justify-center"
                   onClick={() => handleNavClick('contact')}
                 >
-                  Hire Me
+                  Contact Me
                 </Button>
               </div>
             </motion.div>

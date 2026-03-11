@@ -145,7 +145,7 @@ export function Skills() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="glass border border-white/5 rounded-2xl p-6 hover:border-indigo-500/20 transition-colors"
+                  className="glass border border-white/5 rounded-2xl p-5 sm:p-6 hover:border-indigo-500/20 transition-colors"
                 >
                   <SkillBar skill={skill} isInView={isInView} />
                 </motion.div>

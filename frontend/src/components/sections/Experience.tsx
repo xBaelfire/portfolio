@@ -63,7 +63,7 @@ function ExperienceCard({
   const endYear = experience.end_date ? experience.end_date.split('-')[0] : 'Present';
 
   return (
-    <div className="glass border border-white/5 rounded-2xl p-5 sm:p-6 hover:border-indigo-500/20 transition-colors group">
+    <div className="glass border border-white/5 rounded-2xl p-6 sm:p-8 hover:border-indigo-500/20 transition-colors group">
       <div className="flex items-start justify-between mb-3 gap-3">
         <div className="min-w-0">
           <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
@@ -184,30 +184,28 @@ function DesktopTimeline({ experiences: items, isInView }: { experiences: typeof
 
 function MobileTimeline({ experiences: items, isInView }: { experiences: typeof experiences; isInView: boolean }) {
   return (
-    <div className="lg:hidden relative pl-10">
+    <div className="lg:hidden relative ml-4 pl-8 sm:ml-6 sm:pl-10">
       {/* Timeline vertical line */}
-      <div className="absolute left-[14px] top-0 w-0.5 h-full">
-        <motion.div
-          initial={{ scaleY: 0 }}
-          animate={isInView ? { scaleY: 1 } : {}}
-          transition={{ duration: 1.5, ease: "easeOut" as const }}
-          className="w-full h-full"
-          style={{
-            background: 'linear-gradient(180deg, #6366f1, #8b5cf6, rgba(99,102,241,0.1))',
-            transformOrigin: 'top',
-          }}
-        />
-      </div>
+      <motion.div
+        initial={{ scaleY: 0 }}
+        animate={isInView ? { scaleY: 1 } : {}}
+        transition={{ duration: 1.5, ease: "easeOut" as const }}
+        className="absolute left-0 top-0 w-0.5 h-full"
+        style={{
+          background: 'linear-gradient(180deg, #6366f1, #8b5cf6, rgba(99,102,241,0.1))',
+          transformOrigin: 'top',
+        }}
+      />
 
       {items.map((exp, i) => (
         <div key={exp.id} className="relative mb-8 last:mb-0">
-          {/* Timeline dot */}
-          <div className="absolute -left-10 top-5 w-[29px] flex justify-center z-10">
+          {/* Timeline dot — centered on the line (left: 0) */}
+          <div className="absolute top-6 z-10" style={{ left: '-1.0625rem' }}>
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={isInView ? { scale: 1, opacity: 1 } : {}}
               transition={{ duration: 0.4, delay: i * 0.1 + 0.2 }}
-              className="w-3.5 h-3.5 rounded-full border-2 border-indigo-500 bg-gray-950"
+              className="w-3.5 h-3.5 rounded-full border-2 border-indigo-500 bg-gray-950 relative"
               style={{ boxShadow: '0 0 10px rgba(99,102,241,0.5)' }}
             >
               <div className="absolute inset-0.5 rounded-full bg-indigo-500" />
