@@ -1,11 +1,12 @@
 name = "portfolio-worker"
 main = "worker/src/index.ts"
 compatibility_date = "2024-01-01"
+pages_build_output_dir = "dist"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "portfolio-db"
-database_id = "REPLACE_WITH_D1_ID"
+database_id = "e952067b-974f-446b-bb29-a356904ac16a"
 
 [[r2_buckets]]
 binding = "BUCKET"
