@@ -72,7 +72,7 @@ export function formatNumber(num: number): string {
 }
 
 // ===== API REQUEST UTILITY =====
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+const API_URL = import.meta.env.VITE_API_URL || 'https://portfolio-worker.piter3luty1995.workers.dev';
 
 export async function apiRequest<T>(
   endpoint: string,

@@ -53,7 +53,7 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use(
   '/api/*',
   cors({
-    origin: ['http://localhost:5173', 'https://yourdomain.com'],
+    origin: ['http://localhost:5173', 'http://localhost:5180', 'https://portfolio-2qb.pages.dev'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
     credentials: true,

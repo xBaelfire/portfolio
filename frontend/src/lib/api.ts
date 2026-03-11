@@ -125,7 +125,7 @@ export async function uploadImage(file: File): Promise<UploadResponse> {
   formData.append('file', file);
 
   const token = localStorage.getItem('admin_token');
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://portfolio-worker.piter3luty1995.workers.dev';
 
   const response = await fetch(`${API_URL}/api/upload`, {
     method: 'POST',
