@@ -6,6 +6,9 @@ import { z } from 'zod';
 import { Plus, Search, Edit2, Trash2, X, ExternalLink, Github, Star } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/Button';
+import { ImageUploader } from '@/components/admin/ImageUploader';
+import { ToastContainer } from '@/components/admin/Toast';
+import { useToast } from '@/hooks/useToast';
 import { getProjects, createProject, updateProject, deleteProject } from '@/lib/api';
 import type { Project } from '@/types';
 import { formatDateShort, generateSlug } from '@/lib/utils';
@@ -28,11 +31,14 @@ function ProjectModal({
   project,
   onClose,
   onSave,
+  onError,
 }: {
   project: Project | null;
   onClose: () => void;
   onSave: () => void;
+  onError: (msg: string) => void;
 }) {
+  const [imageUrl, setImageUrl] = useState(project?.image_url ?? '');
   const {
     register,
     handleSubmit,
@@ -59,17 +65,21 @@ function ProjectModal({
       tech_stack: data.tech_stack.split(',').map((t) => t.trim()).filter(Boolean),
       featured: data.featured,
       long_description: data.long_description ?? '',
-      image_url: data.image_url ?? '',
+      image_url: imageUrl,
       github_url: data.github_url ?? '',
       live_url: data.live_url ?? '',
     };
 
-    if (project) {
-      await updateProject(project.id, payload);
-    } else {
-      await createProject(payload);
+    try {
+      if (project) {
+        await updateProject(project.id, payload);
+      } else {
+        await createProject(payload);
+      }
+      onSave();
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Failed to save project');
     }
-    onSave();
   };
 
   const inputClass = 'w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors';
@@ -131,9 +141,11 @@ function ProjectModal({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Image URL</label>
-              <input {...register('image_url')} placeholder="https://..." className={inputClass} />
-              {errors.image_url && <p className="text-xs text-rose-400">{errors.image_url.message}</p>}
+              <ImageUploader
+                value={imageUrl}
+                onChange={setImageUrl}
+                label="Project Image"
+              />
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -181,18 +193,21 @@ export function AdminProjects() {
   const [search, setSearch] = useState('');
   const [modalProject, setModalProject] = useState<Project | null | 'new'>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const { toasts, addToast, removeToast } = useToast();
 
   const fetchProjects = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await getProjects();
       setProjects(res.data);
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load projects';
+      addToast(message, 'error');
       setProjects([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [addToast]);
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
@@ -200,14 +215,16 @@ export function AdminProjects() {
     try {
       await deleteProject(id);
       setProjects((prev) => prev.filter((p) => p.id !== id));
-    } catch {
-      // Handle error - in production show toast notification
+      addToast('Project deleted', 'success');
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'Failed to delete project', 'error');
     }
     setDeleteConfirm(null);
   };
 
   const handleSave = () => {
     setModalProject(null);
+    addToast(modalProject === 'new' ? 'Project created' : 'Project updated', 'success');
     fetchProjects();
   };
 
@@ -220,6 +237,7 @@ export function AdminProjects() {
 
   return (
     <AdminLayout title="Projects">
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="relative">
@@ -381,6 +399,7 @@ export function AdminProjects() {
             project={modalProject === 'new' ? null : modalProject}
             onClose={() => setModalProject(null)}
             onSave={handleSave}
+            onError={(msg) => addToast(msg, 'error')}
           />
         )}
       </AnimatePresence>

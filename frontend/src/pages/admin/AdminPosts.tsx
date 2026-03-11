@@ -6,6 +6,9 @@ import { z } from 'zod';
 import { Plus, Search, Edit2, Trash2, X, Eye, Globe, Lock } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/Button';
+import { ImageUploader } from '@/components/admin/ImageUploader';
+import { ToastContainer } from '@/components/admin/Toast';
+import { useToast } from '@/hooks/useToast';
 import { getPosts, createPost, updatePost, deletePost } from '@/lib/api';
 import type { BlogPost } from '@/types';
 import { formatDateShort, generateSlug, calculateReadTime } from '@/lib/utils';
@@ -25,11 +28,14 @@ function PostModal({
   post,
   onClose,
   onSave,
+  onError,
 }: {
   post: BlogPost | null;
   onClose: () => void;
   onSave: () => void;
+  onError: (msg: string) => void;
 }) {
+  const [coverUrl, setCoverUrl] = useState(post?.cover_url ?? '');
   const {
     register,
     handleSubmit,
@@ -60,15 +66,19 @@ function PostModal({
       slug,
       tags,
       read_time,
-      cover_url: data.cover_url ?? '',
+      cover_url: coverUrl,
     };
 
-    if (post) {
-      await updatePost(post.id, payload);
-    } else {
-      await createPost(payload);
+    try {
+      if (post) {
+        await updatePost(post.id, payload);
+      } else {
+        await createPost(payload);
+      }
+      onSave();
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Failed to save post');
     }
-    onSave();
   };
 
   const inputClass = 'w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors';
@@ -138,9 +148,11 @@ function PostModal({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Cover Image URL</label>
-              <input {...register('cover_url')} placeholder="https://..." className={inputClass} />
-              {errors.cover_url && <p className="text-xs text-rose-400">{errors.cover_url.message}</p>}
+              <ImageUploader
+                value={coverUrl}
+                onChange={setCoverUrl}
+                label="Cover Image"
+              />
             </div>
           </div>
 
@@ -176,18 +188,21 @@ export function AdminPosts() {
   const [search, setSearch] = useState('');
   const [modalPost, setModalPost] = useState<BlogPost | null | 'new'>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const { toasts, addToast, removeToast } = useToast();
 
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await getPosts();
       setPosts(res.data);
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load posts';
+      addToast(message, 'error');
       setPosts([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [addToast]);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
@@ -195,14 +210,16 @@ export function AdminPosts() {
     try {
       await deletePost(id);
       setPosts((prev) => prev.filter((p) => p.id !== id));
-    } catch {
-      // Handle error - in production show toast notification
+      addToast('Post deleted', 'success');
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'Failed to delete post', 'error');
     }
     setDeleteConfirm(null);
   };
 
   const handleSave = () => {
     setModalPost(null);
+    addToast(modalPost === 'new' ? 'Post created' : 'Post updated', 'success');
     fetchPosts();
   };
 
@@ -215,6 +232,7 @@ export function AdminPosts() {
 
   return (
     <AdminLayout title="Blog Posts">
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="relative">
@@ -364,6 +382,7 @@ export function AdminPosts() {
             post={modalPost === 'new' ? null : modalPost}
             onClose={() => setModalPost(null)}
             onSave={handleSave}
+            onError={(msg) => addToast(msg, 'error')}
           />
         )}
       </AnimatePresence>
