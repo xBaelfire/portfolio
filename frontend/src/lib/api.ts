@@ -73,8 +73,8 @@ export interface ExperienceEntry {
   readonly updated_at: string;
 }
 
-export async function getExperience(): Promise<PaginatedResponse<ExperienceEntry>> {
-  return apiRequest<PaginatedResponse<ExperienceEntry>>('/api/experience');
+export async function getExperience(): Promise<ExperienceEntry[]> {
+  return apiRequest<ExperienceEntry[]>('/api/experience');
 }
 
 export async function createExperience(

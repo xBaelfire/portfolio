@@ -259,7 +259,8 @@ export function AdminExperience() {
     setError(null);
     try {
       const res = await getExperience();
-      setExperiences(res.data);
+      const items = Array.isArray(res) ? res : ((res as unknown as { data: ExperienceEntry[] }).data ?? []);
+      setExperiences(items);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load experience entries';
       setError(message);
